@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Breck Massey — Portfolio</title>
+    <meta
+      name="description"
+      content="Portfolio of Breck Massey — voxels, circuitry, games, and other work."
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="css/styles.css" />
+  </head>
+  <body data-page="home" data-depth="0">
+    <div class="site-wrap">
+      <header class="site-header">
+        <div class="container nav">
+          <a class="brand" href="index.html">Breck Massey</a>
+          <button class="nav-toggle" type="button" aria-label="Open menu" aria-expanded="false">
+            <span></span>
+          </button>
+          <ul class="nav-links">
+            <li><a href="pages/circuitry.html">Circuitry</a></li>
+            <li><a href="pages/voxels.html">Voxels</a></li>
+            <li><a href="pages/games.html">Games</a></li>
+            <li><a href="pages/other.html">Other</a></li>
+            <li><a href="pages/awards.html">Awards</a></li>
+            <li><a href="pages/resume.html">Resume</a></li>
+          </ul>
+        </div>
+      </header>
+
+      <main>
+        <section class="hero">
+          <div class="container">
+            <h1 class="hero-brand">Breck <em>Massey</em></h1>
+            <p class="hero-lead">
+              MIT Electrical Engineering student and passionate developer.
+            </p>
+            <div class="hero-actions">
+              <a class="btn btn-primary" href="pages/resume.html">Resume</a>
+              <a class="btn btn-ghost" href="pages/awards.html">Awards</a>
+              <a class="btn btn-ghost" href="mailto:breckcmassey@gmail.com">Contact</a>
+            </div>
+          </div>
+        </section>
+
+        <section class="category-strip container" aria-labelledby="explore-label">
+          <h2 id="explore-label">Projects</h2>
+          <div class="category-row">
+            <a class="category-link" href="pages/circuitry.html">
+              <strong>Circuitry</strong>
+              <span>Hardware builds</span>
+            </a>
+            <a class="category-link" href="pages/voxels.html">
+              <strong>Voxels</strong>
+              <span>Worlds &amp; tools</span>
+            </a>
+            <a class="category-link" href="pages/games.html">
+              <strong>Video Games</strong>
+              <span>Playable slices</span>
+            </a>
+            <a class="category-link" href="pages/other.html">
+              <strong>Other</strong>
+              <span>Side studies</span>
+            </a>
+          </div>
+        </section>
+      </main>
+
+      <footer class="site-footer">
+        <div class="container">
+          <span>© <span id="year"></span> Breck Massey</span>
+          <span>MIT Electrical Engineer</span>
+        </div>
+      </footer>
+    </div>
+    <script>
+      document.getElementById("year").textContent = new Date().getFullYear();
+    </script>
+    <script src="js/projects.js"></script>
+    <script src="js/main.js"></script>
+  </body>
+</html>

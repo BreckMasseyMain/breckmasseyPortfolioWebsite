@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Circuitry — Breck Massey</title>
+    <meta name="description" content="Circuitry projects by Breck Massey." />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../css/styles.css" />
+  </head>
+  <body data-page="circuitry" data-depth="1">
+    <div class="site-wrap">
+      <header class="site-header">
+        <div class="container nav">
+          <a class="brand" href="../index.html">Breck Massey</a>
+          <button class="nav-toggle" type="button" aria-label="Open menu" aria-expanded="false">
+            <span></span>
+          </button>
+          <ul class="nav-links">
+            <li><a href="voxels.html">Voxels</a></li>
+            <li><a href="circuitry.html" aria-current="page">Circuitry</a></li>
+            <li><a href="games.html">Games</a></li>
+            <li><a href="other.html">Other</a></li>
+            <li><a href="awards.html">Awards</a></li>
+            <li><a href="resume.html">Resume</a></li>
+          </ul>
+        </div>
+      </header>
+
+      <main>
+        <header class="page-intro container">
+          <h1>Circuitry</h1>
+          <p id="page-blurb">Hardware experiments, firmware, and bench-side prototypes.</p>
+        </header>
+        <ul class="project-list container" id="project-list"></ul>
+      </main>
+
+      <footer class="site-footer">
+        <div class="container">
+          <span>© <span id="year"></span> Breck Massey</span>
+          <span>Circuitry</span>
+        </div>
+      </footer>
+    </div>
+    <script>
+      document.getElementById("year").textContent = new Date().getFullYear();
+    </script>
+    <script src="../js/projects.js"></script>
+    <script src="../js/main.js"></script>
+  </body>
+</html>
