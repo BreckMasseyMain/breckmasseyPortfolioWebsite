@@ -1,0 +1,13 @@
+
+make it work on mobile
+fix spacing on service resume page
+
+Projects:
+FPGA computer
+desmos
+games
+physics
+voxels
+UROP
+Jam it
+speakers

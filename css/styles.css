@@ -457,6 +457,74 @@ button {
   font-size: 0.75rem;
 }
 
+.article-links {
+  list-style: none;
+  margin: 1rem 0 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem 1.25rem;
+}
+
+.article-links li {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.article-links a,
+.article-inline-link a,
+.article-body a {
+  color: var(--ink);
+  text-decoration: underline;
+  text-underline-offset: 0.18em;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.article-link-note {
+  margin-left: 0.4rem;
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.article-inline-link {
+  margin: 0 0 1.15rem;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.article-html {
+  margin: 0 0 1.25rem;
+  overflow: visible;
+}
+
+.article-html > *:first-child {
+  margin-top: 0;
+}
+
+.article-html > *:last-child {
+  margin-bottom: 0;
+}
+
+.article-embed {
+  margin: 1rem 0 1rem;
+  overflow: visible;
+}
+
+.article-embed--khan iframe {
+  display: block;
+  width: 100%;
+  /*max-width: 200px;*/
+  aspect-ratio: 1;
+  /*min-height: 200px;*/
+  border: 1px solid var(--line-soft);
+  background: var(--surface);
+}
+
+.article-html iframe {
+  max-width: 100%;
+}
+
 .article-hero {
   margin: 0 0 1.75rem;
   border: 1px solid var(--line-soft);
@@ -512,6 +580,53 @@ button {
 .article-figure img {
   display: block;
   aspect-ratio: 16 / 10;
+}
+
+.article-figure--video .article-video {
+  position: relative;
+  aspect-ratio: 16 / 9;
+  background: #1a1212;
+}
+
+.article-figure--video video,
+.article-figure--video iframe {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  display: block;
+  background: #1a1212;
+}
+
+.article-figure--demo .article-demo {
+  position: relative;
+  width: 100%;
+  height: var(--demo-height, 600px);
+  max-width: 100%;
+  background: #111;
+  overflow: hidden;
+}
+
+.article-figure--demo iframe {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  display: block;
+  background: #111;
+}
+
+.article-demo--script {
+  overflow: auto;
+}
+
+.article-demo-error {
+  margin: 0;
+  padding: 1rem;
+  color: var(--ink);
+  background: var(--surface);
 }
 
 .article-figure figcaption {
@@ -623,7 +738,7 @@ body[data-page="awards"] .award-list {
 
 .award-item h2,
 .resume-item h2 {
-  margin: 0 0 0.3rem;
+  margin: 0rem 0 0;
   font-size: 1.05rem;
   font-weight: 600;
   letter-spacing: -0.02em;
@@ -631,7 +746,7 @@ body[data-page="awards"] .award-list {
 
 .award-item p,
 .resume-item p {
-  margin: 0;
+  margin: 0 0 0.75rem;
   color: var(--muted);
   font-size: 0.95rem;
 }

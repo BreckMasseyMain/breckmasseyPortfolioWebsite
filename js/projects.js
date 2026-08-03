@@ -3,17 +3,42 @@
  * --------------
  * image     — cover photo used on category lists and the article hero
  * summary   — short blurb on the category list
+ * links     — optional list of links shown under the project title
  * sections  — ordered article sections (each becomes an outline entry)
+ *
+ * Link fields (project.links or a link block):
+ *   { label: "GitHub", href: "https://github.com/..." }
+ *   { label: "Live demo", href: "https://example.com", note: "Optional note" }
  *
  * Section / subsection fields:
  *   title        — heading text (outline label)
  *   id           — optional anchor id (auto-generated from title if omitted)
- *   blocks       — paragraphs and images in order
+ *   blocks       — paragraphs, images, videos, and links in order
  *   subsections  — optional nested headings (also listed in the outline)
  *
  * Block types:
- *   { type: "p", text: "Paragraph text." }
+ *   { type: "p", text: "Paragraph with a [markdown link](https://example.com)." }
  *   { type: "image", src: "assets/images/photo.jpg", alt: "Description", caption: "Optional caption" }
+ *   { type: "video", src: "assets/videos/demo.mp4", caption: "Optional caption", poster: "assets/images/thumb.jpg" }
+ *   { type: "video", src: "https://www.youtube.com/watch?v=VIDEO_ID", caption: "Optional caption" }
+ *   { type: "video", src: "https://vimeo.com/VIDEO_ID", caption: "Optional caption" }
+ *   { type: "link", label: "Source code", href: "https://github.com/...", note: "Optional note" }
+ *   { type: "html", html: "<div class=\"custom\">Any HTML embed</div>" }
+ *   { type: "embed", src: "demos/my-demo/index.html", title: "Playable demo", height: 620, caption: "Optional" }
+ *   { type: "script", src: "demos/widget.js", height: 400, caption: "Optional" }
+ *   { type: "script", scripts: ["demos/lib.js", "demos/widget.js"], height: 400 }
+ *
+ * embed  — iframes a local/remote HTML page (best for full games/demos)
+ * script — loads external JS into a mount <div id="...">; use for widgets
+ *          Your script can find the mount with document.currentScript.previousElementSibling
+ *          or document.querySelector("[data-demo-id='...']") if you set id on the block:
+ *          { type: "script", id: "my-demo", src: "demos/widget.js", height: 400 }
+ *
+ * You can also set `html` on a section/subsection to inject markup after its blocks.
+ * Khan Academy Share → Embed script tags are auto-converted to working iframes.
+ *
+ * Local videos: put files in assets/videos/ (mp4 or webm).
+ * poster is optional and only used for local video files.
  */
 
 const PROJECTS = {
@@ -24,6 +49,10 @@ const PROJECTS = {
       date: "March 2025",
       image: "assets/images/voxel-engine.svg",
       summary: "A chunked voxel renderer exploring meshing, lighting, and camera controls.",
+      links: [
+        { label: "GitHub", href: "https://github.com/" },
+        { label: "Demo", href: "https://example.com", note: "Placeholder link" },
+      ],
       sections: [
         {
           title: "Overview",
@@ -172,25 +201,14 @@ const PROJECTS = {
           blocks: [
             {
               type: "p",
-              text: "Having programmed my whole life, I have always wondered, \"How do computers run my code?\" This project came from trying to answer that question. The whole computer is based around the 65c02 microprocessor. A slightly updated version of the chip that powered the Apple II, Commodore 64, and the NES game console back in the 70s/80s. Then the graphics is all run off of my custom made graphics card. It outputs a VGA signal with a resolution of 320 by 240 pixels with up to 256 different colors and one controllable sprite. Running on the console is a 2d platformer made from over 2000 lines of hand crafted assembly code.",
+              text: "Having programmed my whole life, I have always wondered, \"How do computers run my code?\" This project came from trying to answer that question. The whole computer is based around the 65c02 microprocessor. A slightly updated version of the chip that powered the Apple II, Commodore 64, and the NES game console back in the 70s/80s. Then the graphics is all run off of my custom made graphics card. It outputs a VGA signal with a resolution of 320 by 240 pixels with up to 256 different colors and one controllable sprite. Running on the console is a 2d platformer made from over 2000 lines of hand crafted assembly code. This project started out of curiosity, then during my Junior year I took a capstone class and decided to flesh this project out for that.",
             },
             {
               type: "image",
               src: "assets/images/6502/gameCloseUp.PNG",
               alt: "close up of the game running on my console",
             },
-          ],
-          subsections: [
-            {
-              title: "Firmware",
-              blocks: [
-                {
-                  type: "p",
-                  text: "Firmware handles timing, brightness curves, and simple transitions between scenes. Patterns can be authored as compact frame data so memory stays manageable.",
-                },
-              ],
-            },
-          ],
+          ]
         },
         {
           title: "Development",
@@ -211,7 +229,7 @@ const PROJECTS = {
           ],
           subsections: [
             {
-              title: "PCBs",
+              title: "First PCB",
               blocks: [
                 {
                   type: "image",
@@ -221,7 +239,201 @@ const PROJECTS = {
                 {
                   type: "p",
                   text: "Around this time I was becoming tired of wires coming loose and causing lots of trouble, so I designed my first PCB. After it was assembled I quickly realized it had a few errors that would make it hard to progress. Within a day I had sent out my next PCB design. In the mean time I kept programming. I knew I wanted to ultimately make a game so I worked on implementing some simple fixed point math to achieve smooth movement.",
+                },
+                { 
+                  type: "video",
+                  src: "https://youtube.com/shorts/PcW1GxEqrL0",//"assets/videos/6502/bouncingBall.MOV", 
+                  caption: "Video showing a bouncing ball program", 
+                  poster: "assets/images/6502/bouncingBallThumb.png"
                 }
+              ],
+            },
+            {
+              title: "First Game",
+              blocks: [
+                {
+                  type: "p",
+                  text: "Before knowing I was going to build a whole graphics card I was planning on making a game using the 2 line LCD display. The display was a text display but also supported 8 custom characters. Using these 8 custom characters you could make a little display. Using this display I made my first game. I took my physics from my bouncing ball demo, to make a game similar to flappy bird."
+                },
+                { 
+                  type: "video",
+                  src: "https://youtube.com/shorts/Q2QPLq9dE2k",//"assets/videos/6502/flappyDot.MOV", 
+                  caption: "Video showing my flappy dot game", 
+                  poster: "assets/images/6502/flappyDotThumb.PNG"
+                }
+              ],
+            },
+            {
+              title: "Second PCB",
+              blocks: [
+                {
+                  type: "image",
+                  src: "assets/images/6502/pcb2.JPG",
+                  alt: "Picture of first PCB"
+                },
+                {
+                  type: "p",
+                  text: "The second PCB was much more modular. It was designed for cards such as a sound card or graphics card to be easily slot in. It made it much easier to make memory mapped IO.",
+                }
+              ],
+            },
+            {
+              title: "Joystick",
+              blocks: [
+                {
+                  type: "p",
+                  text: "One of the first circuits made for my second PCB was a joystick input circuit. It fed the analogue signal from the the joystick into a analogue to digital (a2d) converter. Then the rest of the circuit would control the a2d converter to output the value parallelly instead of serially. This value could then be read back by the 6502."
+                },
+                { 
+                  type: "image",
+                  src: "assets/images/6502/joystick.PNG",
+                  alt: "Picture of Joystick circuit"
+                }
+              ],
+            },
+            {
+              title: "Graphics Card",
+              blocks: [
+                {
+                  type: "p",
+                  text: "After making my first game using the LCD display I realized it was too limiting for what I wanted to do. The display had a tiny resolution and took forever to update. This is when I decided to make a graphics card that would allow me to hook my computer to a monitor. To start I would need to generate the sync signals so the monitor could pick up the signal."
+                },
+                { 
+                  type: "image",
+                  src: "assets/images/6502/startToVGA.JPG",
+                  alt: "Picture of Initial VGA circuit"
+                },
+                {
+                  type: "p",
+                  text: "After making the sync signals I worked on the tile layer. Every 8x8 pixels would be 1 tile similar to the NES. This saved on memory because tiles could be reused instead of having to write to every pixel. To test this circuit I uploaded a few images. During this time I also added scrolling. The memory holds more information than one screen so you can use the scroll registers to smoothly move between the other screens. I hooked it up to my computer and used the shifting to make the image wavy."
+                },
+                { 
+                  type: "image",
+                  src: "assets/images/6502/wavy.JPG",
+                  alt: "Picture of the statue of liberty on graphics card"
+                },
+                {
+                  type: "p",
+                  text: "Now that I had tiles working I added the circuitry to take the tile ID and draw the correct tile. To start I made a simple text tile set to quickly check if the correct tiles were being drawn."
+                },
+                { 
+                  type: "image",
+                  src: "assets/images/6502/textTiles.JPG",
+                  alt: "Picture of first text tile set on graphics card"
+                },
+                {
+                  type: "p",
+                  text: "From here the graphics card was essentially done. I worked on creating a tile set for my game. I used aseprite to create all of the graphics and levels, and a few custom scripts to convert them to formats my computer could understand. "
+                },
+                { 
+                  type: "image",
+                  src: "assets/images/6502/gameTileSet.JPG",
+                  alt: "Picture of first text tile set on graphics card"
+                },
+              ],
+            },
+            {
+              title: "Adding a Sprite",
+              blocks: [
+                {
+                  type: "p",
+                  text: "While I could easily render a whole level and animate tiles, adding a moving character was very difficult. Every frame I would have to modify up to 4 tiles to overlay the player. I did not have the overhead for that so I decided I needed to add a circuit that would do this. The sprite circuit just would take a x position and y position and overlay the character. Since I ran out of registers I decided to hard code a set of sprites that I could swap through for animations."
+                },
+                { 
+                  type: "video",
+                  src: "https://youtube.com/shorts/bvXZ7Tj_ckg",//"assets/videos/6502/firstSprite.MOV",
+                  caption: "Video showing the first sprite moving around", 
+                  poster: "assets/images/6502/firstSpriteThumb.PNG"
+                },
+              ],
+            },
+            {
+              title: "Creating the Game",
+              blocks: [
+                {
+                  type: "p",
+                  text: "The graphics card, sound, and controller were all finished so it was time to strap down and program my game. To do so I had to write over 2000 liens of 6502 assembly. I had to make my own sound engine and physics engine for the game. To test levels I created a mock up version using javascript since it was much faster. If you watch the video you may here the \"music\" in the background. It is supposed to be playing the super mario song; however, while programming it, I forgot that music notes don't all play for the same amount of time. If you listen close you can hear that it plays the correct notes but not at the right pace. Oops."
+                },
+                { 
+                  type: "video",
+                  src: "https://youtu.be/Wh87AyZ6NJM",//"assets/videos/6502/demoingGame.MOV",
+                  caption: "Video showing the me playing the finished game", 
+                  poster: "assets/images/6502/demoGameThumb.PNG"
+                },
+              ],
+            },
+          ],
+        },
+        {
+          title: "Demo Game",
+          blocks: [
+            {
+              type: "p",
+              text: "Game mock-up that was used to test levels. It plays similar to the console version but is a bit more janky than the real thing.",
+            },
+            {
+              type: "embed",
+              src: "demos/6502-game/index.html",
+              title: "Waddles Underground Adventure",
+              height: 640,
+              caption: "Click the game, then use arrow keys. Avoid spikes. Checkpoints turn green when reached.",
+            }
+          ]
+        },
+        {
+          title: "Links",
+          blocks: [
+            {
+              type: "p",
+              text: "Project GitHub: [https://github.com/BreckMasseyMain/8BitGameConsole](https://github.com/BreckMasseyMain/8BitGameConsole)",
+            },
+            {
+              type: "p",
+              text: "Project Write Up: [https://github.com/BreckMasseyMain/8BitGameConsole/blob/main/6502%20Capstone%20Paper.pdf](https://github.com/BreckMasseyMain/8BitGameConsole/blob/main/6502%20Capstone%20Paper.pdf)",
+            }
+          ]
+        },
+        {
+          title: "Bonus",
+          blocks: [
+          ],
+          subsections: [
+            {
+              title: "Sound Card",
+              blocks: [
+                {
+                  type: "image",
+                  src: "assets/images/6502/soundCard.JPG",
+                  alt: "Picture of sound card pcb"
+                },
+                {
+                  type: "p",
+                  text: "Midway through the project I wanted to make a sound card. I designed another PCB with my first smd components. The sound card had 3 voices and an analogue output. The first voice would be the same square wave. The second voice would be a new triangle wave. The final voice could be either a square or triangle wave (decided in hardware not software). There would also be a 8 bit analogue output that the cpu could write to. Below is a picture of the triangle waveform.",
+                },
+                {
+                  type: "image",
+                  src: "assets/images/6502/soundCardWaveForm.JPG",
+                  alt: "Picture of triangle wave waveform."
+                },
+                {
+                  type: "p",
+                  text: "Unfortunately when designing the backboard for the card I messed up the memory mapped register wiring causing it to be impossible to actually write to the sound card. I did not have time to fix the card.",
+                },
+              ],
+            },
+            {
+              title: "3D Pseudo Shadows",
+              blocks: [
+                {
+                  type: "p",
+                  text: "One the capabilities of the graphics card was pallet switching. To demo the feature I uploaded a image of 3D models colored based on their normals. Then by switching the colors of the normals out I was able to make it appear like a light was moving around.",
+                },
+                { 
+                  type: "video",
+                  src: "https://youtube.com/shorts/6FCDPHI5Ukk",//"assets/videos/6502/shadows.MOV",
+                  caption: "Video showing the the 3D Pseudo Shadows", 
+                  poster: "assets/images/6502/shadowsThumb.PNG"
+                },
               ],
             },
           ],
