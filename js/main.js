@@ -330,8 +330,12 @@
           const caption = block.caption
             ? `<figcaption>${escapeHtml(block.caption)}</figcaption>`
             : "";
+          const ratio = sanitizeAspectRatio(block.aspectRatio);
+          const ratioAttr = ratio
+            ? ` class="article-figure article-figure--custom-ratio" style="--image-aspect: ${ratio}"`
+            : ` class="article-figure"`;
           return `
-            <figure class="article-figure">
+            <figure${ratioAttr}>
               <img src="${src}" alt="${alt}" loading="lazy" />
               ${caption}
             </figure>`;
@@ -552,6 +556,13 @@
     const depth = document.body.dataset.depth;
     if (depth === "1") return "../";
     return "./";
+  }
+
+  function sanitizeAspectRatio(value) {
+    if (value == null || value === "") return "";
+    const normalized = String(value).trim().replace(":", " / ");
+    if (!/^\d+(\.\d+)?\s*\/\s*\d+(\.\d+)?$/.test(normalized)) return "";
+    return normalized.replace(/\s*\/\s*/, " / ");
   }
 
   function escapeHtml(value) {

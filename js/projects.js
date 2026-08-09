@@ -19,6 +19,8 @@
  * Block types:
  *   { type: "p", text: "Paragraph with a [markdown link](https://example.com)." }
  *   { type: "image", src: "assets/images/photo.jpg", alt: "Description", caption: "Optional caption" }
+ *   { type: "image", src: "assets/images/photo.jpg", alt: "Description", aspectRatio: "4 / 3" }
+ *   { type: "image", src: "assets/images/photo.jpg", alt: "Square", aspectRatio: "1 / 1" }
  *   { type: "video", src: "assets/videos/demo.mp4", caption: "Optional caption", poster: "assets/images/thumb.jpg" }
  *   { type: "video", src: "https://www.youtube.com/watch?v=VIDEO_ID", caption: "Optional caption" }
  *   { type: "video", src: "https://vimeo.com/VIDEO_ID", caption: "Optional caption" }
@@ -44,142 +46,161 @@
 const PROJECTS = {
   voxels: [
     {
-      id: "voxel-engine",
-      title: "Voxel Engine Prototype",
-      date: "March 2025",
-      image: "assets/images/voxel-engine.svg",
-      summary: "A chunked voxel renderer exploring meshing, lighting, and camera controls.",
-      links: [
-        { label: "GitHub", href: "https://github.com/" },
-        { label: "Demo", href: "https://example.com", note: "Placeholder link" },
-      ],
+      id: "voxelOpenGLEngine",
+      title: "Voxel OpenGL Engine",
+      date: "2025",
+      image: "assets/images/voxels/voxelEngineTerrainAndTrees.PNG",
+      summary: "Tiny Voxel Engine based built OpenGl.",
       sections: [
         {
           title: "Overview",
           blocks: [
             {
               type: "p",
-              text: "This prototype focuses on a chunk-based voxel world with greedy meshing to keep draw calls low. The goal was a lightweight engine that still feels solid when flying through dense terrain.",
+              text: "With my goal to make some sort of game with tiny voxels, I knew I would have to create my own engine. Other engines were too restrictive and I wanted full control of how the engine would run. I decided to use OpenGl because it gave me a lot of freedom and was easier to set up than vulkan.",
+            },
+          ]
+        },
+        {
+          title: "Rendering Technique",
+          blocks: [
+            {
+              type: "p",
+              text: "Similar to my previous voxel projects I settled on using DDA raymarching. I also took inspiration from teardown. Instead of starting the rays from the camera, you first rasterize bounding boxes for all of the objects. Then in the fragment shader you render each object. The start of the ray is on the triangle saving a lot of compute. Each object is given a color palette then the voxel data stores an index to the color. This helps reduce the size of the voxel data. While other models are imported, the terrain is made on runtime. It reads in a texture and height map. The texture has no limit on how many colors it can have so, for each chunk you have to run a color compression algorithm to limit the number of colors to 256. It does not sound like much but there is no visible difference. Through tests I found less than a 1% error between the original color and final color.",
             },
             {
               type: "image",
-              src: "assets/images/voxel-engine.svg",
-              alt: "Voxel engine chunk overview",
-              caption: "Early chunk view with greedy meshing enabled.",
+              src: "assets/images/voxels/voxelEngineTerrain.PNG",
+              alt: "Voxel terrain",
+              caption: "Terrain with normal texture"
             },
             {
-              type: "p",
-              text: "Work covered world generation hooks, face culling, simple ambient occlusion, and a free-fly camera.",
+              type: "image",
+              src: "assets/images/voxels/brickTerrainTexture.PNG",
+              alt: "Voxel terrain with brick texture",
+              caption: "Terrain with brick texture"
             },
           ],
           subsections: [
             {
-              title: "Chunk loading",
+              title: "Shadows",
               blocks: [
-                {
-                  type: "p",
-                  text: "Chunk loading is staged so nearby terrain appears first while distant regions stream in. This keeps the camera responsive when flying quickly across the map.",
-                },
-              ],
+            {
+              type: "p",
+              text: "The next change was to add shadows. Once again I took inspiration from teardown. I made a huge low resolution texture which held the approximate data of the whole world. When rendering each object I would cast a ray through the low resolution texture and see if it hit anything. This allowed for a basic implementation of shadows",
             },
             {
-              title: "Lighting",
+              type: "image",
+              src: "assets/images/voxels/shadowsWorking.PNG",
+              alt: "Shadows",
+              caption: "Terrain with rainbow texture and shadows"
+            },
+              ],
+            },
+          ]
+        },
+      ],
+    },
+    {
+      id: "voxelRenderingTechniques",
+      title: "Voxel Rendering Techniques",
+      date: "",
+      image: "assets/images/voxels/shaderToyVoxel.PNG",
+      summary: "A summary of my projects related to rendering voxels.",
+      sections: [
+        {
+          title: "Overview",
+          blocks: [
+            {
+              type: "p",
+              text: "A voxel is a volumetric pixel, essentially a cube (think Minecraft). I became fascinated with voxels because of the game Teardown, which has a fully destructible world made of tiny voxels. Because of this fascination I have made many projects based around them.",
+            },
+          ],
+        },
+        {
+          title: "Rendering Techniques",
+          subsections: [
+            {
+              title: "Rasterization/Meshes",
               blocks: [
                 {
                   type: "p",
-                  text: "A lightweight ambient occlusion pass darkens concave corners without a full global-illumination solve.",
+                  text: "This method of rendering voxels uses the most straightforward method used by most games, rasterization. Every cube is made up of triangles. Sides of the cube that are surrounded are not drawn for efficiency. This method was the easiest to implement but has many drawbacks. When trying to do very small voxels the triangles become very small. While modern GPUs are very efficient, small triangles use a lot of resources. Also lighting and other effects are harder to implement than other methods. ",
                 },
                 {
                   type: "image",
-                  src: "assets/images/terrain-painter.svg",
-                  alt: "Lighting study",
-                  caption: "Placeholder lighting study capture.",
+                  src: "assets/images/voxels/rasterization.jpg",
+                  alt: "Rasterized cubes",
                 },
               ],
             },
-          ],
-        },
-        {
-          title: "Next steps",
-          blocks: [
             {
-              type: "p",
-              text: "Next steps include smarter LOD for far chunks and a cleaner API for placing interactive blocks.",
-            },
-          ],
-        },
-      ],
-    },
-    {
-      id: "procedural-caves",
-      title: "Procedural Cave Systems",
-      date: "January 2025",
-      image: "assets/images/procedural-caves.svg",
-      summary: "Noise-driven caves and cavern rooms carved from solid voxel volumes.",
-      sections: [
-        {
-          title: "Overview",
-          blocks: [
-            {
-              type: "p",
-              text: "Procedural Cave Systems experiments with layered noise to carve tunnels, chambers, and occasional vertical shafts from solid stone.",
-            },
-            {
-              type: "image",
-              src: "assets/images/procedural-caves.svg",
-              alt: "Cave system preview",
-            },
-          ],
-          subsections: [
-            {
-              title: "Noise layers",
+              title: "Marching Cubes",
               blocks: [
                 {
                   type: "p",
-                  text: "Different noise frequencies control corridor width versus large open rooms. Sparse ore and crystal clusters sit along walls to give caverns a sense of discovery.",
+                  text: "This is another rasterization method; However, instead of drawing cubes, you form a mesh around the voxel data. This method was originally developed to visualize medical scan. I liked this method but I preferred the look of cubes.",
+                },
+                {
+                  type: "image",
+                  src: "assets/images/voxels/marchingCubes.jpg",
+                  alt: "Marching Cubes",
                 },
               ],
             },
-          ],
-        },
-        {
-          title: "Uses",
-          blocks: [
             {
-              type: "p",
-              text: "The project is useful as a building block for dungeon-style voxel maps and exploration demos.",
-            },
-          ],
-        },
-      ],
-    },
-    {
-      id: "terrain-painter",
-      title: "Voxel Terrain Painter",
-      date: "November 2024",
-      image: "assets/images/terrain-painter.svg",
-      summary: "A brush tool for sculpting heightfields and painting voxel materials.",
-      sections: [
-        {
-          title: "Overview",
-          blocks: [
-            {
-              type: "p",
-              text: "Voxel Terrain Painter is a creative tool for shaping landscapes with sculpt and paint brushes. Raise land, dig gullies, and stamp material layers such as grass, dirt, and stone.",
-            },
-            {
-              type: "image",
-              src: "assets/images/terrain-painter.svg",
-              alt: "Terrain painter brushes",
-            },
-          ],
-          subsections: [
-            {
-              title: "Interface",
+              title: "DDA Raycasting",
               blocks: [
                 {
                   type: "p",
-                  text: "The UI stays minimal: brush size, strength, and material slots. Undo history keeps experiments safe while iterating on a scene.",
+                  text: "DDA is a line drawing algorithm which visits every \"pixel\" the line passes through. This is very useful for raycasting where a ray is essentially a line. To start I made a simple cpu based raycaster as a proof of concept, but since it was running on the cpu it was very inefficient.",
+                },
+                {
+                  type: "image",
+                  src: "assets/images/voxels/lowResCPURaycasting.jpg",
+                  alt: "CPU Raymarcher",
+                },
+                {
+                  type: "p",
+                  text: "I converted the CPU raymarcher to a GPU raymarcher using shadertoy.",
+                },
+                {
+                  type: "image",
+                  src: "assets/images/voxels/shadertoyVoxel2.PNG",
+                  alt: "GPU Raymarcher",
+                },
+              ],
+            },
+            {
+              title: "DDA Raycasting Lighting",
+              blocks: [
+                {
+                  type: "p",
+                  text: "After getting the raycaster working on the GPU, I started experimenting with lighting. ",
+                },
+                {
+                  type: "image",
+                  src: "assets/images/voxels/shadertoyVoxel.PNG",
+                  alt: "GPU Raymarcher with better Lighting",
+                },
+              ],
+            },
+            {
+              title: "Multilevel DDA Raycasting",
+              blocks: [
+                {
+                  type: "p",
+                  text: "In the DDA method you visit every voxel. If there is a lot of open space this can be very slow. The solution is to have a hierarchy where large open spaces can be skipped. You start by casting the ray on the top level. If you hit something you go down a level until you are at the base level. This allows large spaces to be skipped. Once again I started by coding this method on the CPU.",
+                },
+                {
+                  type: "image",
+                  src: "assets/images/voxels/multiLevel2DDiagram.PNG",
+                  alt: "Multilevel DDA diagram",
+                },
+                {
+                  type: "image",
+                  src: "assets/images/voxels/multiLevel.PNG",
+                  alt: "Multilevel DDA diagram",
                 },
               ],
             },
@@ -800,46 +821,107 @@ const PROJECTS = {
       ],
     },
     {
-      id: "Speakers",
-      title: "Big Speakers",
+      id: "printedSub",
+      title: "3D Printed Subwoofer",
       date: "2025",
-      image: "assets/images/speakers/speakersOnDesk.JPG",
-      summary: "Canvas charts exploring clarity, hierarchy, and motion.",
+      image: "assets/images/speakers/subPrinted.JPG",
+      summary: "Wanted to build speakers for my dorm.",
       sections: [
         {
           title: "Overview",
           blocks: [
             {
               type: "p",
-              text: "This study explores how modest motion and clear hierarchy can make charts easier to read without turning them into decoration.",
+              text: "When I moved into my dorm for college I was missing my big speakers, so I started work on a new set. Instead of buying drivers like last time, I wanted to build the actual subwoofer driver.",
+            },
+          ],
+        },
+        {
+          title: "Development",
+          blocks: [
+            {
+              type: "p",
+              text: "I knew I wanted to make a parametric design in fusion so the subwoofer could be fully customizable, but before making it in fusion I made a mock up in Desmos.",
             },
             {
               type: "image",
-              src: "assets/images/data-viz.svg",
-              alt: "Chart study",
+              src: "assets/images/desmos/subwoofer.PNG",
+              alt: "Desmos design",
+            },
+            {
+              type: "p",
+              text: "I knew the parametric design would work so I modeled a subwoofer in fusion."
+            },
+            {
+              type: "image",
+              src: "assets/images/speakers/subRender.jpg",
+              alt: "Fusion design",
+              aspectRatio: "1 / 1"
+            },
+            {
+              type: "p",
+              text: "From there I 3D printed the design and assembled it in my dorms maker space. I also designed a box for the speaker."
+            },
+            {
+              type: "image",
+              src: "assets/images/speakers/subInBox.JPG",
+              alt: "Fusion design",
+              aspectRatio: "1 / 1"
             },
           ],
+          subsections:
+          [
+            {
+              title: "Downfalls",
+              blocks: [
+                {
+                  type: "p",
+                  text: "While the subwoofer driver worked, I made some critical errors which made it so it could be practically used. The first error was I wound the coil with too thin of wire. This made the coil heat up very quickly at low volumes and unusable for any listening volumes. The other pitfall was I built the box using thin wood. I knew it was a risk to use the thin wood but I hopped since the speaker was not going to be playing super loud, it would be fine; However, this was not the case. The box flexed a lot and made the speaker even quieter.",
+                }
+              ],
+            },
+          ]
         },
       ],
     },
     {
-      id: "automation",
-      title: "Automation Scripts",
-      date: "June 2024",
-      image: "assets/images/automation.svg",
-      summary: "Everyday automation for file sorting, backups, and reminders.",
+      id: "Speakers",
+      title: "Big Speakers",
+      date: "2025",
+      image: "assets/images/speakers/speakersOnDesk.JPG",
+      summary: "Built some big speakers for some big noise",
       sections: [
         {
           title: "Overview",
           blocks: [
             {
               type: "p",
-              text: "Automation Scripts covers small utilities that tidy folders, kick off backups, and surface reminders at useful moments.",
+              text: "I was tired of my little speakers having poor bass. They could barely play down to 60Hz. I wanted a pair of speakers that could play really deep bass; However, I did not want to spend a lot of money. This is how I decided to build my own speakers. ",
+            },
+          ],
+        },
+        {
+          title: "Development",
+          blocks: [
+            {
+              type: "p",
+              text: "To start I researched which drivers I would use. I settled on some Dayton Audio drivers, and I decided to go with a 3 way setup. After this I did some calculations on box and port size to tune the speakers down to 26Hz. Once that was finished I designed the box in Fusion.",
             },
             {
               type: "image",
-              src: "assets/images/automation.svg",
-              alt: "Automation diagram",
+              src: "assets/images/speakers/boxRender.jpg",
+              alt: "Speaker box render",
+              aspectRatio: "3 / 4",
+            },
+            {
+              type: "p",
+              text: "After designing the box I started building it. The hardest part was soldering the crossovers. I had to solder inside the speakers at awkward angles which made it very difficult. Painting the boxes and sanding the 3D printed parts was also very tedious, but in the end I built two amazing speakers. They sound amazing and can play very low just like I wanted.",
+            },
+            {
+              type: "image",
+              src: "assets/images/speakers/buildingSpeakers.JPEG",
+              alt: "building the box",
+              aspectRatio: "3 / 4",
             },
           ],
         },
