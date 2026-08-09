@@ -1,0 +1,1785 @@
+<!DOCTYPE html>
+<html lang="en">
+<!-- Program exported to HTML using the KA Project Exporter by @MushyAvocado 
+https://www.khanacademy.org/computer-programming/ka-project-exporter/5195486791385088
+-->
+	
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+	<title>SoftBodyRocket</title>
+	<style>
+		
+		
+		/* Change the color as you want */
+		:root {
+			--background-color: #000000;
+		}
+		
+		
+		html, body, #wrapper {
+			overflow: hidden;
+			width: 100%;
+		    height: 100%;
+			margin: 0px;
+			padding: 0px;
+		    width: calc(100% + 1px);
+		}
+		
+		body {
+		    background-color: var(--background-color);
+		}
+		
+		
+		canvas {
+			width: fit-content;
+			height: fit-content;
+		}
+		
+		canvas:focus {
+			outline: none;
+		}
+		
+		/* Automatically fits to the remaining height and centers the canvas it contains */
+		#wrapper {
+			padding: 0px;
+			margin: 0px;
+			display: flex;
+			justify-content: center;
+			align-items: center;
+			width: 100%;
+		}
+		
+</style>
+</head>
+<body id="wrapper">
+    <!-- Canvases with a class of "sketch" are applied to the program in the order runPJS() is called. -->
+    <canvas class="sketch"></canvas>
+	<!-- Load the PJS library -->
+	<script type="text/javascript" src="https://cdn.jsdelivr.net/gh/Khan/processing-js@master/processing.js"></script>
+	<!-- The exporter script must be loaded before the program script -->
+	<script type="text/javascript" src="https://cdn.jsdelivr.net/gh/Mushy-Avocado/KA-exporter@v1.0.1/exporter.js"></script>
+	<!-- Run Khan Academy program and import PJS -->
+	<script type="application/javascript">
+		
+		
+		function program() {
+		    
+		    title("SoftBodyRocket");
+		    size(600, 600);
+		    
+		    // All code goes here
+			
+			
+			var debugText=!false;
+			
+			var cam=[0,0];
+			var pcam=[0,0];
+			var camZ=0.2;
+			
+			var pressure=1;
+			
+			var totalChecks=0;
+			
+			
+			
+			//math
+			//{
+			var vectorClass=function(x,y){
+			    this.x=x;
+			    this.y=y;
+			};
+			vectorClass.prototype.normalize=function(){
+			    var l=sqrt(sq(this.x)+sq(this.y));
+			    if(l>0){
+			        this.x/=l;
+			        this.y/=l;
+			    }
+			};
+			vectorClass.prototype.mult=function(inputX){
+			    this.x*=inputX;
+			    this.y*=inputX;
+			};
+			
+			var toCamPos=function(x,y){
+			    var towardsMid=new vectorClass(width/2-x+cam[0],height/2-y+cam[1]);
+			    return [width/2-towardsMid.x*camZ,height/2-towardsMid.y*camZ];
+			};
+			
+			var determinant2x2=function(input){
+			    var output=input[0][0]*input[1][1]-input[0][1]*input[1][0];
+			    
+			    return output;  
+			};
+			
+			var determinant3x3=function(input){
+			    var output=0;
+			    var aM=[
+			        [input[1][1],input[1][2]],
+			        [input[2][1],input[2][2]],
+			        ];
+			    var bM=[
+			        [input[1][0],input[1][2]],
+			        [input[2][0],input[2][2]],
+			        ];
+			    var cM=[
+			        [input[1][0],input[1][1]],
+			        [input[2][0],input[2][1]],
+			        ];
+			    var output=input[0][0]*determinant2x2(aM)-input[0][1]*determinant2x2(bM)+input[0][2]*determinant2x2(cM);
+			    
+			  
+			    return output;  
+			};
+			    
+			var areaOfTriangle=function(input){
+			    var inputCorrectMatrix=[
+			        [input[0][0],input[0][1],1],
+			        [input[1][0],input[1][1],1],
+			        [input[2][0],input[2][1],1]
+			        ];
+			    return abs(determinant3x3(inputCorrectMatrix))/2;
+			};
+			
+			var angleBetweenPoints=function(center,p1,p2){
+			    var m1=sqrt(sq(center[0]-p1[0])+sq(center[1]-p1[1]));
+			    var m2=sqrt(sq(center[0]-p2[0])+sq(center[1]-p2[1]));
+			    var n=(p1[0]-center[0])*(p2[0]-center[0])+(p1[1]-center[1])*(p2[1]-center[1]);
+			    var d=m1*m2;
+			  
+			    return acos(n/d);
+			};
+			
+			var angleBetweenPointsWithNegative=function(center,p1,p2){
+			    
+			    //x1*y2-y1*x2,x1*x2+y1*y2
+			    var x1=p1[0]-center[0];
+			    var x2=p2[0]-center[0];
+			    var y1=p1[1]-center[1];
+			    var y2=p2[1]-center[1];
+			    return atan2(x1*y2-y1*x2,x1*x2+y1*y2);
+			};
+			
+			var dot=function(vecA,vecB){
+			  return vecA[0]*vecB[0]+vecA[1]*vecB[1];  
+			};
+			
+			var closestPointOnLine=function(linePoses,pointPos){
+			//credit
+			//https://monkeyproofsolutions.nl/wordpress/how-to-calculate-the-shortest-distance-between-a-point-and-a-line/
+			  var m=[linePoses[0]-linePoses[2],linePoses[1]-linePoses[3]];
+			  var t=dot(m, [pointPos[0] - linePoses[0],pointPos[1] - linePoses[1]]) / dot(m, m);
+			  t=constrain(t,-1,0);
+			  var intersectPnt =[linePoses[0] + t * m[0],linePoses[1] + t * m[1]];
+			  return intersectPnt;
+			    
+			};
+			
+			var lineLineCollisions=function(x1,y1,x2,y2,x3,y3,x4,y4){
+			    var den=(x1-x2)*(y3-y4)-(y1-y2)*(x3-x4);
+			    if(den===0){
+			        return [false];
+			    }
+			    var t=((x1-x3)*(y3-y4)-(y1-y3)*(x3-x4))/den;
+			    var u=-((x1-x2)*(y1-y3)-(y1-y2)*(x1-x3))/den;
+			   
+			    if(t>=0&&t<=1&&u>=0&&u<=1){
+			    var pt=new vectorClass();
+			        pt.x=x1+t*(x2-x1);
+			        pt.y=y1+t*(y2-y1);
+			         strokeWeight(4);
+			
+			        return [true,[pt.x,pt.y]];
+			    }else{
+			        return [false];
+			    }
+			};
+			
+			var normalOfLine=function(l){
+			    var len=dist(l[0],l[1],l[2],l[3]);
+			    return [(l[1]-l[3])/len,-1*(l[0]-l[2])/len];
+			};
+			
+			var rotateAroundPoint=function(o,p,a){
+			    var s = sin(a);
+			    var c = cos(a);
+			    var po=[p[0]-o[0],p[1]-o[1]];
+			  
+			    var newP = [po[0] * c - po[1] * s,  po[0] * s + po[1] * c];
+			    newP[0]+= o[0];  
+			    newP[1]+= o[1];
+			  return newP;
+			};
+			
+			var rotatePointsAroundPoint=function(o,ps,a){
+			    var output=[];
+			    for(var i=0;i<ps.length;i++){
+			        output.push(rotateAroundPoint(o,ps[i],a));
+			    }
+			    
+			    return output;
+			};
+			
+			var midPointOfLine=function(l){
+			
+			    return [(l[0]+l[2])/2,(l[1]+l[3])/2];
+			};
+			
+			var midPointOfPoints=function(points){
+			    var out=[0,0];
+			    for(var i=0;i<points.length;i++){
+			        out[0]+=points[i][0];
+			        out[1]+=points[i][1];
+			    }
+			    out=[out[0]/points.length,out[1]/points.length];
+			    return out;
+			};
+			
+			var AABB=function(AA,BB){
+			    /*x1,y1,x2,y2*/
+			    return (AA[0]<BB[2]&&AA[2]>BB[0]&&AA[1]<BB[3]&&AA[3]>BB[1]);
+			    
+			};
+			
+			var _max=function(a,b){
+			    return a<b?b:a;
+			};
+			
+			var _min=function(a,b){
+			    return a<b?a:b;
+			};
+			
+			var randomColor=function(){
+			    return color(random(0,255),random(0,255),random(0,255));
+			};
+			
+			//}
+			
+			
+			
+			var keys=[];
+			for(var i=0;i<200;i++){
+			    keys.push(false);
+			}
+			
+			
+			
+			
+			//paths
+			
+			var Path=function(points,type,speed,distance,rotationOffset){
+			    this.points=points;
+			    this.type=type;
+			    this.speed=speed;
+			    this.distance=distance;
+			    this.rotationOffset=rotationOffset;
+			};
+			Path.prototype.moveRandom=function(strength){
+			  for(var i=0;i<this.points;i++){
+			    var ra=random(0,360);
+			    var rs=random(0,strength);
+			    this.points[i][0]+=cos(ra)*rs;
+			    this.points[i][1]+=sin(ra)*rs;
+			    
+			  
+			  }  
+			    
+			};
+			
+			
+			
+			//softBody
+			//{
+			var softBody=function(points,statics,collisionLines,springs,volumeTriangles,frame,damping,springStrength,volumeStrength,frameStrength,mass,layer,objectColor){
+			    
+			    //set up points and velocities
+			    //{
+			        this.statics=statics;
+			        this.totalStatic=true;
+			        for(var i=0;i<this.statics.length;i++){
+			            if(this.statics[i]===false){
+			                this.totalStatic=false;
+			            }
+			        }
+			        this.points=points;
+			        this.pointsV=[];
+			        for(var i=0;i<this.points.length;i++){
+			            this.pointsV.push([0,0]);
+			        }
+			    //}
+			    
+			    //set up collision stuff
+			    //{
+			        this.collisionLines=collisionLines;
+			        this.boundingBox=[/*x1,y1,x2,y2*/];
+			        this.mass=mass;
+			        this.layer=layer;
+			    //}
+			    
+			    //set up springs
+			    //{
+			        this.springs=springs;
+			        this.springStrength=springStrength;
+			        this.lengths=[];
+			        for(var i=0;i<this.springs.length;i++){
+			            this.lengths.push(dist(this.points[this.springs[i][0]][0],this.points[this.springs[i][0]][1],this.points[this.springs[i][1]][0],this.points[this.springs[i][1]][1])); 
+			        }
+			    //}
+			    
+			    this.damping=damping;
+			    
+			    
+			    //set of volume stuff
+			    //{
+			       this.tris=volumeTriangles;
+			       this.volumeStrength=volumeStrength;
+			       this.normalVolume=0;
+			       for(var i=0;i<this.tris.length;i++){
+			          this.normalVolume+=areaOfTriangle([
+			              [this.points[this.tris[i][0]][0],this.points[this.tris[i][0]][1]],
+			              [this.points[this.tris[i][1]][0],this.points[this.tris[i][1]][1]],
+			              [this.points[this.tris[i][2]][0],this.points[this.tris[i][2]][1]]]);
+			       }
+			    //}
+			    
+			
+			    //set of frame
+			    //{
+			        this.frameStrength=frameStrength;
+			        this.framePoints=frame;
+			        this.frame=[];
+			        for(var i=0;i<frame.length;i++){
+			            this.frame.push([points[frame[i]][0]+0+0*random(-50,50),points[frame[i]][1]+0+0*random(-50,50)]);
+			        }
+			    //}
+			    
+			    
+			    this.rotation=0;
+			    
+			    this.fillColor=objectColor;
+			    //this.fillColor=color(random(0,255),random(0,255),random(0,255));
+			    
+			    this.pathPoint=0;
+			    this.pathPointV=1;
+			    this.path=null;
+			    
+			};
+			
+			//returns array of fram point possitions [[x,y],[x,y]...]
+			softBody.prototype.returnFramePoints=function(){
+			    var output=[];
+			    for(var i=0;i<this.framePoints.length;i++){
+			        output.push(this.points[this.framePoints[i]]);
+			    }
+			    return output;
+			};
+			
+			//recalculates the bounding box
+			softBody.prototype.calculateBoundingBox=function(){
+			    this.boundingBox=[Infinity,Infinity,-Infinity,-Infinity];
+			
+			    for(var i=0;i<this.points.length;i++){
+			        this.boundingBox[0]=_min(this.boundingBox[0],this.points[i][0]);
+			        this.boundingBox[1]=_min(this.boundingBox[1],this.points[i][1]);
+			        this.boundingBox[2]=max(this.boundingBox[2],this.points[i][0]);
+			        this.boundingBox[3]=max(this.boundingBox[3],this.points[i][1]);        
+			    }
+			    
+			};
+			
+			//draw the softbody (true) with debug (false) no debug
+			softBody.prototype.draw= function(drawDebug) {
+			
+			    //draw the collision lines (basically the shape's lines) (draws them neon like
+			    //{  
+			        //line one
+			        strokeWeight(7);
+			        stroke(this.fillColor,100);
+			        for(var i=0;i<this.collisionLines.length;i++){
+			        var p1=toCamPos(this.points[this.collisionLines[i][0]][0],this.points[this.collisionLines[i][0]][1]);
+			        var p2=toCamPos(this.points[this.collisionLines[i][1]][0],this.points[this.collisionLines[i][1]][1]);
+			      
+			            line(p1[0],p1[1],p2[0],p2[1]);
+			        
+			        }
+			        
+			        
+			        //line two
+			        strokeWeight(15);
+			        stroke(this.fillColor,100);
+			        for(var i=0;i<this.collisionLines.length;i++){
+			        var p1=toCamPos(this.points[this.collisionLines[i][0]][0],this.points[this.collisionLines[i][0]][1]);
+			        var p2=toCamPos(this.points[this.collisionLines[i][1]][0],this.points[this.collisionLines[i][1]][1]);
+			      
+			            line(p1[0],p1[1],p2[0],p2[1]);
+			        
+			        }
+			        
+			        
+			        //line three with points
+			        strokeWeight(2);
+			        stroke(255,255,255);
+			        for(var i=0;i<this.collisionLines.length;i++){
+			            strokeWeight(2);
+			            var p1=toCamPos(this.points[this.collisionLines[i][0]][0],this.points[this.collisionLines[i][0]][1]);
+			        var p2=toCamPos(this.points[this.collisionLines[i][1]][0],this.points[this.collisionLines[i][1]][1]);
+			      
+			            line(p1[0],p1[1],p2[0],p2[1]);
+			            
+			            //points
+			            strokeWeight(2);
+			            point(p1[0],p1[1]);
+			            point(p2[0],p2[1]);
+			        } 
+			    
+			    //}
+			    
+			    //fill in shape
+			    if(!false){
+			        fill(this.fillColor,100);
+			        stroke(red(this.fillColor)*0.9,green(this.fillColor)*0.9,blue(this.fillColor)*0.9,100);
+			        
+			        beginShape();
+			        for(var i=0;i<this.collisionLines.length;i++){
+			            var p1=toCamPos(this.points[this.collisionLines[i][0]][0],this.points[this.collisionLines[i][0]][1]);
+			            
+			            vertex(p1[0],p1[1]);
+			        }
+			        
+			        var p1=toCamPos(this.points[this.collisionLines[0][0]][0],this.points[this.collisionLines[0][0]][1]);
+			            
+			            vertex(p1[0],p1[1]);
+			        endShape();
+			    }
+			    
+			    
+			    //debug stuff
+			    if(drawDebug){
+			        
+			        //debug points with text
+			        //{
+			            strokeWeight(7);
+			            stroke(0, 0, 0);
+			            fill(0, 0, 0);
+			            textSize(15);
+			        
+			            for(var i=0;i<this.points.length;i++){
+			                var p1=toCamPos(this.points[i][0],this.points[i][1]);
+			                point(p1[0],p1[1]);
+			                text(i,p1[0]+5,p1[1]+5);
+			            }
+			        
+			        //}
+			        
+			        //springs
+			        //{
+			            strokeWeight(1);
+			            stroke(84, 199, 95);
+			        for(var i=0;i<this.springs.length;i++){
+			            var p1=toCamPos(this.points[this.springs[i][0]][0],this.points[this.springs[i][0]][1]);
+			            var p2=toCamPos(this.points[this.springs[i][1]][0],this.points[this.springs[i][1]][1]);
+			            line(p1[0],p1[1],p2[0],p2[1]);
+			            }
+			        //}
+			    
+			        //mid point of shape and rotation
+			        //{
+			            strokeWeight(1);
+			            stroke(255, 0, 38);
+			            var midPointOfObject=midPointOfPoints(this.points);
+			            var correctMidPoint=toCamPos(midPointOfObject[0],midPointOfObject[1]);
+			            point(correctMidPoint[0],correctMidPoint[1]);
+			          
+			            line(correctMidPoint[0],correctMidPoint[1],
+			            correctMidPoint[0]+cos(this.rotation)*10,correctMidPoint[1]+sin(this.rotation)*10);
+			        //}
+			    
+			        //bounding box
+			        //{
+			            noFill();
+			            stroke(0, 0, 0);
+			            strokeWeight(1);
+			            var correctBoundingBox1=toCamPos(this.boundingBox[0],this.boundingBox[1]);
+			            var correctBoundingBox2=toCamPos(this.boundingBox[2],this.boundingBox[3]);
+			            rect(correctBoundingBox1[0],correctBoundingBox1[1],correctBoundingBox2[0]-correctBoundingBox1[0],correctBoundingBox2[1]-correctBoundingBox1[1]);
+			        //}
+			    
+			        //frame
+			        //{
+			            strokeWeight(1);
+			            stroke(255, 0, 255);
+			            //println(this.frame.length);
+			            for(var i=0;i<this.frame.length;i++){
+			                var p1=toCamPos(this.frame[i][0],this.frame[i][1]);
+			                var p2=toCamPos(this.frame[(i+1)%this.frame.length][0],this.frame[(i+1)%this.frame.length][1]);
+			                line(p1[0],p1[1],p2[0],p2[1]);
+			            }
+			        //}
+			    
+			        //volume triangles
+			        //{
+			            strokeWeight(1);
+			            stroke(0, 119, 255);
+			            fill(255, 255, 255,100);
+			            for(var i=0;i<this.tris.length;i++){
+			                var p1=toCamPos(this.points[this.tris[i][0]][0],this.points[this.tris[i][0]][1]);
+			                var p2=toCamPos(this.points[this.tris[i][1]][0],this.points[this.tris[i][1]][1]);
+			                var p3=toCamPos(this.points[this.tris[i][2]][0],this.points[this.tris[i][2]][1]);
+			                
+			                triangle(p1[0],p1[1],p2[0],p2[1],p3[0],p3[1]);
+			                /*
+			                triangle(this.points[this.tris[i][0]][0]-cam[0],this.points[this.tris[i][0]][1]-cam[1],
+			                    this.points[this.tris[i][1]][0]-cam[0],this.points[this.tris[i][1]][1]-cam[1],
+			                    this.points[this.tris[i][2]][0]-cam[0],this.points[this.tris[i][2]][1]-cam[1] );*/
+			            }
+			        //}
+			        
+			        
+			        //path points
+			        //{
+			        if(this.path!==null){
+			        strokeWeight(10);
+			        stroke(251, 255, 0);
+			            for(var i=0;i<this.path.points.length-1;i++){
+			                var correctPos1=toCamPos(this.path.points[i][0],this.path.points[i][1]);
+			                var correctPos2=toCamPos(this.path.points[i+1][0],this.path.points[i+1][1]);
+			                //point(correctPos[0],correctPos[1]);
+			                line(correctPos1[0],correctPos1[1],correctPos2[0],correctPos2[1]);
+			                
+			                
+			            }
+			            }
+			        //}
+			    }
+			    
+			    
+			};
+			
+			//moves midpoint of frame to pos. Pos should be [x,y]
+			softBody.prototype.moveFrame=function(pos){
+			    var midPointOfFrame=midPointOfPoints(this.frame);
+			    var offset=[pos[0]-midPointOfFrame[0],pos[1]-midPointOfFrame[1]];
+			    for(var i=0;i<this.frame.length;i++){
+			         this.frame[i][0]+=offset[0];
+			         this.frame[i][1]+=offset[1];
+			    }
+			};
+			
+			//rotate frame by angle
+			softBody.prototype.rotateFrame=function(angle){
+			    this.rotation+=angle;
+			    var midPointOfFrame=midPointOfPoints(this.frame);
+			    this.frame=rotatePointsAroundPoint(midPointOfFrame,this.frame,angle);
+			};
+			
+			//setFrame will move and rotate the frame to the points of the softbody.
+			softBody.prototype.setFrame=function(){
+			   for(var c=0;c<10;c++){
+			    var midPointOfFrame=midPointOfPoints(this.frame);
+			    this.moveFrame(midPointOfPoints(this.returnFramePoints()));
+			    
+			    var averageAngle=0;
+			    for(var i=0;i<this.framePoints.length;i++){
+			        averageAngle+=angleBetweenPointsWithNegative(midPointOfFrame,this.frame[i],this.points[this.framePoints[i]]);
+			    }
+			    
+			    averageAngle/=this.points.length;
+			
+			    this.rotateFrame(averageAngle);
+			    
+			   }
+			};
+			
+			//will try to put the points back to the frame
+			softBody.prototype.addFrameForces=function(){
+			    for(var i=0;i<this.framePoints.length;i++){
+			        var l=dist(this.points[this.framePoints[i]][0],this.points[this.framePoints[i]][1],
+			                        this.frame[i][0],this.frame[i][1]);
+			        var changeAmount=this.frameStrength*(-l);
+			            var vector=new vectorClass(this.points[this.framePoints[i]][0]-this.frame[i][0],
+			                                        this.points[this.framePoints[i]][1]-this.frame[i][1]);
+			                      
+			        vector.normalize();
+			        vector.x*=changeAmount;
+			        vector.y*=changeAmount;
+			        this.pointsV[this.framePoints[i]][0]+=vector.x;
+			        this.pointsV[this.framePoints[i]][1]+=vector.y;
+			    
+			    }
+			    
+			    
+			};
+			
+			//updates points position based off of velocity and adds damping
+			softBody.prototype.simulate=function(){
+			    for(var i=0;i<this.points.length;i++){
+			        if(!this.statics[i]){
+			        this.points[i][0]+=this.pointsV[i][0];
+			        this.points[i][1]+=this.pointsV[i][1];
+			
+			        
+			        
+			        this.pointsV[i][0]*=this.damping;
+			        this.pointsV[i][1]*=this.damping;}
+			    }
+			    
+			};
+			
+			//adds force to all points velocity force=[xForce,yForce]
+			softBody.prototype.addForce=function(force){
+			    for(var i=0;i<this.pointsV.length;i++){
+			        this.pointsV[i][0]+=force[0];
+			        this.pointsV[i][1]+=force[1];
+			        
+			    }
+			};
+			
+			//simulates springs
+			softBody.prototype.springConstraint=function(){
+			    for(var c=0;c<this.springs.length;c++){
+			        var i=this.springs[c][0];
+			        var i2=this.springs[c][1];
+			        
+			        var l=dist(this.points[i][0],this.points[i][1],
+			                        this.points[i2][0],this.points[i2][1]);
+			       
+			        var changeAmount=this.springStrength*(this.lengths[c]-l);
+			                    
+			        var vector=new vectorClass(this.points[i][0]-this.points[i2][0],
+			                                        this.points[i][1]-this.points[i2][1]);
+			        vector.normalize();
+			        
+			        vector.x*=changeAmount;
+			        vector.y*=changeAmount;
+			       
+			        this.pointsV[i][0]+=vector.x;
+			        this.pointsV[i][1]+=vector.y;
+			        
+			        this.pointsV[i2][0]-=vector.x;
+			        this.pointsV[i2][1]-=vector.y;
+			    
+			    }
+			};
+			
+			//simulates volume
+			softBody.prototype.volumeConstraint=function(){
+			    var currentVolume=0;
+			    
+			    //calculate Volume
+			    //{
+			        for(var i=0;i<this.tris.length;i++){
+			           currentVolume+=areaOfTriangle([
+			               [this.points[this.tris[i][0]][0],this.points[this.tris[i][0]][1]],
+			               [this.points[this.tris[i][1]][0],this.points[this.tris[i][1]][1]],
+			               [this.points[this.tris[i][2]][0],this.points[this.tris[i][2]][1]]]);
+			        }
+			    //}
+			    currentVolume*=1/pressure;
+			    //move based off of volume
+			    if(currentVolume!==0){
+			    for(var i=0;i<this.collisionLines.length;i++){
+			      var normalDirection=normalOfLine([this.points[this.collisionLines[i][0]][0],this.points[this.collisionLines[i][0]][1],this.points[this.collisionLines[i][1]][0],this.points[this.collisionLines[i][1]][1]]);
+			      normalDirection[0]*=-1;
+			      normalDirection[1]*=-1;
+			      
+			      var mid=midPointOfLine([this.points[this.collisionLines[i][0]][0],this.points[this.collisionLines[i][0]][1],this.points[this.collisionLines[i][1]][0],this.points[this.collisionLines[i][1]][1]]);
+			      stroke(255, 0, 0);
+			      strokeWeight(5);
+			      var normalPoint1=toCamPos(mid[0],mid[1]);
+			      var normalPoint2=toCamPos(mid[0]+normalDirection[0]*(this.normalVolume/currentVolume-1)*this.volumeStrength*200,mid[1]+normalDirection[1]*(this.normalVolume/currentVolume-1)*this.volumeStrength*200);
+			     // line(mid[0],mid[1],mid[0]+normalDirection[0]*(this.normalVolume/currentVolume-1)*this.volumeStrength*100,mid[1]+normalDirection[1]*(this.normalVolume/currentVolume-1)*this.volumeStrength*100);
+			     // line(normalPoint1[0],normalPoint1[1],normalPoint2[0],normalPoint2[1]);
+			       this.pointsV[this.collisionLines[i][0]][0]+=normalDirection[0]*(this.normalVolume/currentVolume-1)*this.volumeStrength;
+			       this.pointsV[this.collisionLines[i][0]][1]+=normalDirection[1]*(this.normalVolume/currentVolume-1)*this.volumeStrength;
+			       this.pointsV[this.collisionLines[i][1]][0]+=normalDirection[0]*(this.normalVolume/currentVolume-1)*this.volumeStrength;
+			       this.pointsV[this.collisionLines[i][1]][1]+=normalDirection[1]*(this.normalVolume/currentVolume-1)*this.volumeStrength;
+			        
+			    }
+			    }
+			};
+			
+			//returns if point ([x,y]) is inside the object
+			softBody.prototype.insideObject=function(point){
+			    var count=0;
+			
+			    for(var i=0;i<this.collisionLines.length;i++){
+			
+			        var col=lineLineCollisions(
+			    this.points[this.collisionLines[i][0]][0],this.points[this.collisionLines[i][0]][1],
+			    this.points[this.collisionLines[i][1]][0],this.points[this.collisionLines[i][1]][1],
+			    point[0],point[1],
+			
+			
+			        max(this.boundingBox[0],this.boundingBox[2])+10,point[1]);
+			        
+			        if(col[0]){
+			            /*
+			            strokeWeight(count);
+			            stroke(255, 0, 0);
+			             line(point[0],point[1],
+			                    max(this.boundingBox[0],this.boundingBox[2])+10,point[1]);
+			            
+			            text(count,col[1][0],col[1][1]);*/
+			            
+			            count++;
+			        }
+			    }
+			    return count%2;
+			};
+			
+			//returns closest Point and the line the points is on [outPoint,minDistI]
+			softBody.prototype.closestPointLine=function(point){
+			    //closestPointOnLine (linePoses,pointPos)
+			     var minDist=Infinity;
+			     var minDistI=0;
+			     var outPoint=[];
+			     for(var i=0;i<this.collisionLines.length;i++){
+			         var d=closestPointOnLine(
+			[this.points[this.collisionLines[i][0]][0],this.points[this.collisionLines[i][0]][1],  
+			this.points[this.collisionLines[i][1]][0],this.points[this.collisionLines[i][1]][1]],point);
+			        var distance=dist(point[0],point[1],d[0],d[1]);
+			        if(distance<minDist){
+			             minDist=distance;
+			             minDistI=i;
+			             outPoint=d;
+			        }
+			     }
+			     return [outPoint,minDistI];
+			};
+			
+			//will detect collisions then update the softbodies
+			softBody.prototype.resolveCollisions=function(otherBody){
+			    //Idea to fix collisions. If both line points are static then move this point by full amount. If this point is static then fully move the lines
+			    
+			    
+			    //checks to see if the two bounding boxes collide if so then we can continue
+			    //also checks to see if they share the same layer. If so then they cant collide
+			    if(AABB(this.boundingBox,otherBody.boundingBox)&&this.layer!==otherBody.layer&&!(this.totalStatic&&otherBody.totalStatic)){
+			        
+			        //updates the total checks variable so we can see how many collisions are happening
+			        totalChecks++;
+			        
+			        //checks all the points of this softbody to see if they are in the other softbody
+			        for(var i=0;i<this.framePoints.length;i++){
+			            
+			            //if the point is inside of the other softbody then we need to resolve this
+			            if(otherBody.insideObject(this.points[this.framePoints[i]])){
+			                
+			                //debug point (point that is insde other shape)
+			                //{
+			                    stroke(255, 0, 0);
+			                    strokeWeight(10);
+			                    //point(this.points[i][0]-cam[0],this.points[i][1]-cam[1]);
+			                //}
+			                
+			                var closestPointLine=otherBody.closestPointLine(this.points[this.framePoints[i]]);
+			               
+			               //debug point for closest point
+			                //{
+			                    stroke(55, 0, 255);
+			                    strokeWeight(10);
+			                    // point(closestPointLine[0][0]-cam[0],closestPointLine[0][1]-cam[1]);
+			                //}
+			               
+			                var dir=[this.points[this.framePoints[i]][0]-closestPointLine[0][0],this.points[this.framePoints[i]][1]-closestPointLine[0][1]];
+			                
+			                var totalMass=this.mass+otherBody.mass;
+			                var shiftAmount=1-this.mass/totalMass;
+			                var otherPoints=otherBody.collisionLines[closestPointLine[1]];
+			                
+			                if((otherBody.statics[otherPoints[0]]&&otherBody.statics[otherPoints[1]])){
+			                    shiftAmount=1;
+			                }
+			                //shiftAmount/=2;
+			                //resolves this point
+			                if(!this.statics[this.framePoints[i]]){
+			                    this.points[this.framePoints[i]][0]-=dir[0]*shiftAmount;
+			                    this.points[this.framePoints[i]][1]-=dir[1]*shiftAmount;
+			                    this.pointsV[this.framePoints[i]][0]-=dir[0]*shiftAmount;
+			                    this.pointsV[this.framePoints[i]][1]-=dir[1]*shiftAmount;
+			                }
+			                
+			                //resolve the other object's line
+			                var shiftAmount=1-otherBody.mass/totalMass;
+			                if(this.statics[this.framePoints[i]]){
+			                    shiftAmount=1;
+			                }
+			                //shiftAmount/=2;
+			                if(!otherBody.statics[otherPoints[0]]){
+			                    otherBody.points[otherPoints[0]][0]+=dir[0]*shiftAmount;
+			                    otherBody.points[otherPoints[0]][1]+=dir[1]*shiftAmount;
+			                    
+			                    otherBody.pointsV[otherPoints[0]][0]+=dir[0]*shiftAmount/2;
+			                    otherBody.pointsV[otherPoints[0]][1]+=dir[1]*shiftAmount/2;
+			                }
+			                
+			                if(!otherBody.statics[otherPoints[1]]){
+			                    otherBody.points[otherPoints[1]][0]+=dir[0]*shiftAmount;
+			                    otherBody.points[otherPoints[1]][1]+=dir[1]*shiftAmount;
+			                    
+			                    otherBody.pointsV[otherPoints[1]][0]+=dir[0]*shiftAmount/2;
+			                    otherBody.pointsV[otherPoints[1]][1]+=dir[1]*shiftAmount/2;
+			                }
+			                
+			                
+			                //debug line that would show which lines are moving
+			               // {
+			                stroke(0, 255, 77);
+			               /* line(
+			                otherBody.points[otherPoints[0]][0],otherBody.points[otherPoints[0]][1],
+			                otherBody.points[otherPoints[1]][0],otherBody.points[otherPoints[1]][1]);
+			                */
+			                //}
+			            }
+			        
+			        
+			        
+			        }
+			        
+			    }
+			    
+			};
+			
+			//updates the softbody does all the physics stuff but collisions
+			softBody.prototype.update=function(rotate,move){
+			  
+			   // this.addForce([0,1]);
+			    this.simulate();
+			    this.calculateBoundingBox();
+			    this.setFrame();
+			    this.springConstraint();
+			    this.volumeConstraint();
+			     if((keys[65]*1-keys[68]*1)+""!=="NaN"){
+			        this.rotateFrame((keys[68]*5-keys[65]*5)*rotate);
+			    }
+			   
+			    if((keys[RIGHT]*1-keys[LEFT]*1)+""!=="NaN"){
+			        this.addForce([(keys[RIGHT]-keys[LEFT])*move,(keys[UP]-keys[DOWN])*move*-1]);
+			       
+			    }
+			    this.addFrameForces();
+			    this.followPath();
+			};
+			
+			//returns forward vector normalized [x,y]
+			softBody.prototype.forward=function(){ 
+			    return [cos(this.rotation),sin(this.rotation)];
+			};
+			
+			//returns right vector normalized [x,y] basically forward vector rotated 90 degrees.
+			softBody.prototype.right=function(){ 
+			    return [cos(this.rotation+90),sin(this.rotation+90)];
+			};
+			
+			softBody.prototype.averageVelocity=function(){
+			    var x=0;
+			    var y=0;
+			    for(var i=0;i<this.pointsV.length;i++){
+			        x+=this.pointsV[i][0];
+			        y+=this.pointsV[i][1];
+			    }
+			    return [x/this.pointsV.length,y/this.pointsV.length];
+			};
+			
+			softBody.prototype.setPath=function(newPath){
+			    this.path=newPath;
+			};
+			
+			softBody.prototype.followPath=function(){
+			    if(this.path!==null){
+			        var targetPoint=[this.path.points[this.pathPoint][0]+0,this.path.points[this.pathPoint][1]+0];
+			        var currentMidPos=midPointOfPoints(this.points);
+			        
+			        targetPoint[0]-=currentMidPos[0];
+			        targetPoint[1]-=currentMidPos[1];
+			        
+			        var dir= new vectorClass(targetPoint[0],targetPoint[1]);
+			        dir.normalize();
+			        dir.mult(this.path.speed);
+			        
+			        this.addForce([dir.x,dir.y]);
+			        
+			        
+			        var midPointOfFrame=midPointOfPoints(this.frame);
+			        var rotationAngle=angleBetweenPointsWithNegative(midPointOfFrame,[midPointOfFrame[0]+cos(this.rotation),midPointOfFrame[1]+sin(this.rotation)],[this.path.points[this.pathPoint][0]+0,this.path.points[this.pathPoint][1]+0]);
+			        rotationAngle+=this.path.rotationOffset;
+			        this.rotateFrame(rotationAngle/5);
+			        this.addFrameForces();
+			        
+			        if(dist(targetPoint[0],targetPoint[1],0,0)<this.path.distance){
+			            this.pathPoint+=this.pathPointV;
+			            if(this.pathPoint>=this.path.points.length){
+			                if(this.path.type==="circle"){
+			                    this.pathPoint=0;
+			                    this.pathPointV=1;
+			                }else if(this.path.type==="bounce"){
+			                    
+			                    this.pathPoint=this.path.points.length-2;
+			                    this.pathPointV=-1;
+			                }
+			            }
+			            if(this.pathPoint<0){
+			                if(this.path.type==="circle"){
+			                    this.pathPoint=0;
+			                    this.pathPointV=1;
+			                }else if(this.path.type==="bounce"){
+			                    
+			                    this.pathPoint=1;
+			                    this.pathPointV=1;
+			                }
+			            }
+			        }
+			    }
+			};
+			//}
+			
+			
+			//creating bodies
+			//{
+			var softBodies=[];
+			
+			//rectangles
+			//{
+			    
+			var createRectangle=function(x,y,w,h,wl,hl,damping,springStrength,volumeStrength,frameStrength,mass,layer,objectColor){
+			
+			    
+			    var squarePoints=[];
+			    
+			    for(var i=0;i<w;i++){
+			        for(var c=0;c<h;c++){
+			            squarePoints.push([x+i*wl+random(-5,5)*0,y+c*hl+random(-5,5)*0+sin(i*wl*2)*10*0]);
+			        }   
+			    }
+			    
+			    
+			    var squareSprings=[];
+			    for(var i=0;i<w-1;i++){
+			        for(var c=0;c<h;c++){
+			            squareSprings.push([i*h+c,(i+1)*h+c]);
+			        }
+			    }
+			    for(var i=0;i<w;i++){
+			        for(var c=0;c<h-1;c++){
+			            squareSprings.push([i*h+c,(i)*h+c+1]);
+			        }
+			    }
+			    for(var i=0;i<w-1;i++){
+			        for(var c=0;c<h-1;c++){
+			            squareSprings.push([i*h+c,(i+1)*h+c+1]);
+			        }
+			    }
+			    for(var i=0;i<w-1;i++){
+			        for(var c=0;c<h-1;c++){
+			            squareSprings.push([(i+1)*h+c,(i)*h+c+1]);
+			        }
+			    }
+			    var frameLines=[];
+			    for(var i=0;i<w-1;i++){
+			        frameLines.push([i*h,(i+1)*h]);
+			    }
+			    for(var i=0;i<h-1;i++){
+			        frameLines.push([(w-1)*h+i,(w-1)*h+i+1]);
+			    }
+			    for(var i=0;i<w-1;i++){
+			        frameLines.push([(w-1-i)*h+(h-1),(w-1-i-1)*h+(h-1)]);
+			    }
+			    for(var i=0;i<h-1;i++){
+			        frameLines.push([(h-1)-i,(h-1)-i-1]);
+			    }
+			    
+			    var framePoints=[];
+			    for(var i=0;i<w;i++){
+			        framePoints.push([i*h]);
+			    }
+			    for(var i=0;i<h;i++){
+			        framePoints.push([h*(w-1)+i]);
+			    }
+			    for(var i=0;i<w;i++){
+			        framePoints.push([i*h+h-1]);
+			    }
+			    for(var i=0;i<h;i++){
+			        framePoints.push([h-i-1]);
+			    }
+			    
+			    var squareStaticPoints=[];
+			    for(var i=0;i<squarePoints.length;i++){
+			        if(i%(h*w)===0||i<h||i>h*(w-1)){
+			            squareStaticPoints.push(true);
+			        }else{
+			            squareStaticPoints.push(!false);
+			        }
+			    }
+			    
+			    return new softBody(squarePoints,
+			                            squareStaticPoints,
+			                            frameLines,
+			                            squareSprings,
+			                            [],
+			                            framePoints,
+			                            damping,springStrength,volumeStrength,frameStrength,mass,layer,objectColor);
+			};
+			    
+			    //softBodies.push(createRectangle(180,242,6,5,20,40,0.8,0.1,0.0,0.6,1000,"wall"));
+			
+			   // softBodies.push(createRectangle(-100,300,6,3,200,200,0.8,0.1,0.0,0.6,1000,"wall"));
+			   // softBodies.push(createRectangle(-100,-200,6,3,200,80,0.8,0.1,0.0,0.6,1000,"wall"));
+			
+			    softBodies.push(createRectangle(-2500,-3000,3,6,400,1300,0.8,0.1,0.0,0.6,1000,"wall",color(124, 29, 207)));
+			  //  softBodies.push(createRectangle(800,-100,3,6,40,100,0.8,0.1,0.0,0.6,1000,"wall"));
+			    
+			   // softBodies.push(createRectangle(-29,100,10,10,20,20,0.8,0.3,0.0,0.6,1000,"wall"));
+			//}
+			
+			
+			
+			/*circles*/
+			//{
+			var createCircle=function(x,y,r,sides,damping,springStrength,volumeStrength,frameStrength,mass,layer,static,deformations,deformationAngle){
+			    var circlePoints=[];
+			    
+			    for(var i=0;i<sides;i++){
+			   
+			        circlePoints.push([cos(i/sides*360+random(-deformationAngle,deformationAngle))*(r+random(-deformations,deformations))+x,sin(i/sides*360+random(-deformationAngle,deformationAngle))*(r+random(-deformations,deformations))+y]);
+			    }
+			    
+			    var circleCollisionLines=[];
+			    for(var i=0;i<circlePoints.length;i++){
+			        circleCollisionLines.push([i,(i+1)%circlePoints.length]);
+			    }
+			    var circleVolumeTriangles=[];
+			    
+			    for(var i=1;i<circlePoints.length-1;i++){
+			        circleVolumeTriangles.push([0,i,i+1]);
+			    }
+			    var circleFrame=[];
+			    for(var i=0;i<circlePoints.length;i++){
+			        circleFrame.push(i);
+			    }
+			      
+			    var circleStaticPoints=[];
+			    //var static=random(0,1)>0.5;
+			    for(var i=circleStaticPoints.length;i<circlePoints.length;i++){
+			        circleStaticPoints.push(static);
+			    }
+			    
+			    return new softBody(circlePoints,
+			                                circleStaticPoints,
+			                                circleCollisionLines,
+			                                [],
+			                                circleVolumeTriangles,
+			                                circleFrame,
+			                                damping,springStrength,volumeStrength,frameStrength,mass,static?"wall":layer,randomColor());
+			};
+			/*x,y,r,sides,damping,springStrength,volumeStrength,frameStrength,mass,layer,static,deformations,deformationAngle*/
+			    for(var i=0;i<15;i++){
+			      //  softBodies.push(createCircle(random(-2000,13400),random(-4200,10000),150+random(-10,500),6+round(random(0,5)),0.92,0.1,1,0.1,10,"ball"+i,random(0,1)>0.5/*true*/,random(0,40),random(0,30)));
+			    }
+			    //0.92,0.1,1,0.1,10
+			    softBodies.push(createCircle(-900,300,300,10,0.92,0.1,1,0.1,10,"ball"+i,false,0,0));
+			    
+			    
+			    //track path
+			var x=0;
+			var y=0;
+			var s=300;
+			var trackPathPoints=[
+			    [-0.65*s+x,3.5*s+y],
+			    [0*s+x,-5*s+y],
+			    [1*s+x,-8*s+y],
+			    [2*s+x,-10*s+y],
+			    [3*s+x,-11*s+y],
+			    [5*s+x,-12*s+y],
+			    [8*s+x,-13*s+y],
+			    [11.86*s+x,-12.73*s+y],
+			    [15.8*s+x,-13.42*s+y],
+			    [20*s+x,-14*s+y],
+			    [25*s+x,-13*s+y],
+			    [28*s+x,-9*s+y],
+			    [29*s+x,-5.9*s+y],
+			    [29.9*s+x,0.04*s+y],
+			    [32.84*s+x,3.6*s+y],
+			    [36.25*s+x,4.94*s+y],
+			    [40*s+x,5*s+y],
+			    [46.96*s+x,8*s+y],
+			    [50.5*s+x,14.05*s+y],
+			    [48*s+x,20.7*s+y],
+			    [40*s+x,25*s+y],
+			    [34.8*s+x,26.85*s+y],
+			    [27.6*s+x,27*s+y],
+			    [22.3*s+x,25.3*s+y],
+			    [17.5*s+x,20.14*s+y],
+			    [14.4*s+x,18.2*s+y],
+			    [11.2*s+x,13.2*s+y],
+			    [6.6*s+x,10.8*s+y],
+			    [3.05*s+x,10.2*s+y],
+			    [0.7*s+x,8.5*s+y]
+			    ];
+			var trackPath=new Path(trackPathPoints,"circle",2.5,80,0);
+			softBodies[softBodies.length-1].setPath(trackPath);
+			//}
+			
+			
+			
+			/*car*/
+			//{
+			    var x=-200;
+			    var y=881;
+			    var s=12;
+			    var carPoints=[[x+4*s,y],[x+9*s,y],[x+12*s,y+4*s],[x+14.5*s,y+4*s],[x+14.5*s,y+7*s],[x+12*s,y+7*s],[x+3.5*s,y+7*s],[x,y+7*s],[x,y+4.5*s],[x+2.5*s,y+3.2*s]];
+			    var carLines=[];
+			    for(var i=0;i<carPoints.length;i++){
+			        carLines.push([i,(i+1)%carPoints.length]);
+			        //println(carLines[i]);
+			    }
+			    var carSprings=[[0,2],[1,9],[2,4],[3,5],[2,6],[9,5],[8,6],[9,7]];
+			    for(var i=0;i<carPoints.length;i++){
+			         carSprings.push([i,(i+1)%carPoints.length]);
+			    }
+			    var carFrame=[];
+			    for(var i=0;i<carPoints.length;i++){
+			        carFrame.push(i);
+			    }
+			    var carStaticPoints=[];
+			    for(var i=carStaticPoints.length;i<carPoints.length;i++){
+			        carStaticPoints.push(false);
+			    }
+			
+			/*
+			points,statics,collisionLines,springs,volumeTriangles,frame,damping,springStrength,volumeStrength,frameStrength,mass,layer
+			*/
+			/*
+			var car=new softBody(carPoints,
+			                    carStaticPoints,
+			                    carLines,
+			                    carSprings,
+			                    [],
+			                    carFrame,
+			                    0.8,0.3,0,0.3,1,"car",randomColor());
+			softBodies.push(car);
+			trackPath=new Path(trackPathPoints,"circle",6.5,80);
+			softBodies[softBodies.length-1].setPath(trackPath);
+			*/
+			//}
+			
+			
+			/*rocket*/
+			//{
+			
+			var makeRocket=function(x,y,s){
+			    //var x=-550;
+			//    var y=500;
+			 //   var s=30;
+			    var rocketShipPoints=[
+			        [x+0*s,y+0.2*s],
+			        [x+0*s,y+2*s],
+			        [x+0.75*s,y+3*s],
+			        [x+0.75*s,y+4*s],
+			        [x+0.9*s,y+5*s],
+			        [x+1.3*s,y+6*s],
+			        [x+2*s,y+7*s],
+			        [x+2.7*s,y+6*s],
+			        [x+3.1*s,y+5*s],
+			        [x+3.25*s,y+4*s],
+			        [x+3.25*s,y+3*s],
+			        [x+4*s,y+2*s],
+			        [x+4*s,y+0.2*s],
+			        [x+3*s,y+1.1*s],
+			        [x+3*s,y+0.5*s],
+			        [x+2.75*s,y+0.5*s],
+			        [x+2.75*s,y+0*s],
+			        [x+1.25*s,y+0*s],
+			        [x+1.25*s,y+0.5*s],
+			        [x+1*s,y+0.5*s],
+			        [x+1*s,y+1.1*s],
+			       // [x+0*s,y+0.2*s],
+			        
+			    ];
+			    
+			    var rocketShipStatics=[];
+			    for(var i=0;i<rocketShipPoints.length;i++){
+			        rocketShipStatics.push(false);
+			    }
+			    
+			    var rocketShipLines=[];
+			    for(var i=0;i<rocketShipPoints.length;i++){
+			        rocketShipLines.push([i,(i+1)%rocketShipPoints.length]);
+			    }
+			    
+			    var rocketShipSprings=[
+			        [0,2],
+			        [1,20],
+			        [10,12],
+			        [11,13],
+			        [20,14],
+			        [13,19],
+			        [18,16],
+			        [17,15],
+			        [5,7],
+			        [4,8],
+			        [3,9],
+			        [2,10],
+			        [5,8],
+			        [4,7],
+			        [4,9],
+			        [3,8],
+			        [3,10],
+			        [2,9],
+			        [2,13],
+			        [10,20],
+			        [20,13],
+			        [15,18],
+			        [2,20],
+			        [10,13],
+			        [18,20],
+			        [15,13],
+			    ];
+			    for(var i=0;i<rocketShipPoints.length;i++){
+			        rocketShipSprings.push([i,(i+1)%rocketShipPoints.length]);
+			    }
+			    
+			    var rocketFrame=[];
+			    for(var i=0;i<rocketShipPoints.length;i++){
+			        rocketFrame.push([i]);
+			    }
+			    
+			    var rocketVolumeTriangles=[
+			        [0,1,2],
+			        [0,2,20],
+			        [6,5,7],
+			        [5,7,8],
+			        [4,5,8],
+			        [3,4,9],
+			        [8,9,4],
+			        [2,3,10],
+			        [3,9,10],
+			        [10,11,12],
+			        [10,12,13],
+			        [2,10,13],
+			        [2,13,20],
+			        
+			        [13,14,20],
+			        [20,19,14],
+			        [15,16,18],
+			        [16,17,19],
+			    ];
+			  return [rocketShipPoints,
+			                    rocketShipStatics,
+			                    rocketShipLines,
+			                    rocketShipSprings,
+			                    rocketVolumeTriangles,
+			                    rocketFrame];  
+			};
+			
+			/*
+			points,statics,collisionLines,springs,volumeTriangles,frame,damping,springStrength,volumeStrength,frameStrength,mass,layer
+			*/
+			var rocketData1=makeRocket(-550,500,30);
+			var rocket=new softBody(rocketData1[0],
+			                    rocketData1[1],
+			                    rocketData1[2],
+			                    rocketData1[3],
+			                    rocketData1[4],
+			                    rocketData1[5],
+			                    //0.95,0.1,0.1,0.5,10
+			                    //0.92,0.1,1,0.1,10
+			                    0.92,0.1,1,0.1,10,"rocket",randomColor());
+			softBodies.push(rocket);
+			
+			for(var i=0;i<91;i++){
+			    rocket.rotateFrame(1);
+			    rocket.addFrameForces();
+			    rocket.update(false,0);
+			}
+			
+			
+			var rocketData2=makeRocket(-550,900,30);
+			softBodies.push(new softBody(rocketData2[0],
+			                    rocketData2[1],
+			                    rocketData2[2],
+			                    rocketData2[3],
+			                    rocketData2[4],
+			                    rocketData2[5],
+			                    //0.95,0.1,0.1,0.5,10
+			                    //0.92,0.1,1,0.1,10
+			                    0.92,0.1,1,0.1,10,"rocket2",randomColor()));
+			trackPath=new Path(trackPathPoints,"circle",2.5,80,-90);
+			trackPath.moveRandom(100);
+			softBodies[softBodies.length-1].setPath(trackPath);
+			//}
+			
+			//track
+			//{
+			//in blob
+			//{
+			var x=0;
+			var y=0;
+			var s=300;
+			var inBlobPoints=[
+			    [1.05*s+x,3.63*s+y],
+			    [2.34*s+x,8.06*s+y],
+			    [4.05*s+x,8.82*s+y],
+			    [6.88*s+x,9.12*s+y],
+			    [11.99*s+x,11.69*s+y],
+			    [15.83*s+x,17.28*s+y],
+			    [18.4*s+x,18.7*s+y],
+			    [23.54*s+x,24.14*s+y],
+			    [28.12*s+x,25.38*s+y],
+			    [34.76*s+x,25.15*s+y],
+			    [39.43*s+x,23.4*s+y],
+			    [47.2*s+x,19.2*s+y],
+			    [48.91*s+x,13.45*s+y],
+			    [45.49*s+x,8.86*s+y],
+			    [39.33*s+x,6.56*s+y],
+			    [36.22*s+x,6.64*s+y],
+			    [32.22*s+x,5.18*s+y],
+			    [28.59*s+x,1.12*s+y],
+			    [27.32*s+x,-5.65*s+y],
+			    [26.38*s+x,-8.48*s+y],
+			    [23.64*s+x,-11.98*s+y],
+			    [19.67*s+x,-12.33*s+y],
+			    [16.03*s+x,-11.74*s+y],
+			    [12.15*s+x,-11.06*s+y],
+			    [7.88*s+x,-11.3*s+y],
+			    [5.54*s+x,-10.39*s+y],
+			    [3.76*s+x,-9.48*s+y],
+			    [3.2*s+x,-8.8*s+y],
+			    [2.52*s+x,-7.24*s+y],
+			    [1.61*s+x,-4.46*s+y]
+			    ];
+			    
+			var inBlobStatics=[];
+			for(var i=0;i<inBlobPoints.length;i++){
+			    inBlobStatics.push(true);
+			}
+			
+			var inBlobCollisionLines=[];
+			for(var i=0;i<inBlobPoints.length;i++){
+			    inBlobCollisionLines.push([i,(i+1)%inBlobPoints.length]);
+			}
+			
+			var inBlobFrame=[];
+			for(var i=0;i<inBlobPoints.length;i++){
+			    inBlobFrame.push(i);
+			}
+			    /*
+			points,statics,collisionLines,springs,volumeTriangles,frame,damping,springStrength,volumeStrength,frameStrength,mass,layer
+			*/
+			softBodies.push(new softBody(inBlobPoints,inBlobStatics,inBlobCollisionLines,[],[],inBlobFrame,0.95,0.1,0,0.5,10,"wall",color(166, 0, 255)));
+			//}
+			
+			//out blob
+			//{
+			  var x=0;
+			var y=0;
+			var s=300;
+			var outBlobPoints=[
+			    [-7.43*s+x,2.98*s+y],
+			    [-20*s+x,2.98*s+y],
+			    [-20*s+x,40*s+y],
+			    [70*s+x,40*s+y],
+			    [70*s+x,-30*s+y],
+			    [-20*s+x,-30*s+y],
+			    [-20*s+x,2.98*s+y],
+			    [-7.43*s+x,2.98*s+y],
+			    
+			    [-6.45*s+x,-7.15*s+y],
+			    [-5.08*s+x,-11.04*s+y],
+			    [-2.81*s+x,-14.81*s+y],
+			    [-0.04*s+x,-17.08*s+y],
+			    [2.85*s+x,-18.15*s+y],
+			    [8.47*s+x,-19.78*s+y],
+			    [10.69*s+x,-19.43*s+y],
+			    [14.87*s+x,-20.16*s+y],
+			    [21.33*s+x,-20.67*s+y],
+			    [30.44*s+x,-17.08*s+y],
+			    [34.47*s+x,-11.09*s+y],
+			    [35.72*s+x,-6.92*s+y],
+			    [35.14*s+x,-4.29*s+y],
+			    [35.33*s+x,-2.73*s+y],
+			    [36.36*s+x,-1.86*s+y],
+			    [42.69*s+x,-1.24*s+y],
+			    [52.83*s+x,4.57*s+y],
+			    [56.87*s+x,16.44*s+y],
+			    [51.22*s+x,26.69*s+y],
+			    [42.28*s+x,31.41*s+y],
+			    [34.94*s+x,33.65*s+y],
+			    [25.52*s+x,33.48*s+y],
+			    [17.32*s+x,29.93*s+y],
+			    [13.89*s+x,25.9*s+y],
+			    [8.67*s+x,21.87*s+y],
+			    [8.05*s+x,19.23*s+y],
+			    [5.47*s+x,17.5*s+y],
+			    [-0.94*s+x,15.71*s+y],
+			    [-5.86*s+x,10.27*s+y],
+			    [-7.43*s+x,2.98*s+y],
+			    ];
+			    
+			var outBlobStatics=[];
+			for(var i=0;i<outBlobPoints.length;i++){
+			    outBlobStatics.push(true);
+			}
+			
+			var outBlobCollisionLines=[];
+			for(var i=0;i<outBlobPoints.length;i++){
+			    outBlobCollisionLines.push([i,(i+1)%outBlobPoints.length]);
+			}
+			
+			var outBlobFrame=[];
+			for(var i=0;i<outBlobPoints.length;i++){
+			    outBlobFrame.push(i);
+			}
+			    /*
+			points,statics,collisionLines,springs,volumeTriangles,frame,damping,springStrength,volumeStrength,frameStrength,mass,layer
+			*/
+			softBodies.push(new softBody(outBlobPoints,outBlobStatics,outBlobCollisionLines,[],[],outBlobFrame,0.95,0.1,0,0.5,10,"wall",color(149, 0, 255)));  
+			//}
+			//}
+			
+			//arrow
+			//{
+			
+			
+			var arrow=function(x,y,s){
+			/*var x=-500;
+			var y=0;
+			var s=100;*/
+			var arrowPoints=[
+			    [0*s+x,4*s+y],
+			    [1.5*s+x,2*s+y],
+			    [0.5*s+x,2*s+y],
+			    [0.5*s+x,0*s+y],
+			    [-0.5*s+x,0*s+y],
+			    [-0.5*s+x,2*s+y],
+			    [-1.5*s+x,2*s+y],
+			    ];
+			var arrowStatics=[];
+			    for(var i=0;i<arrowPoints.length;i++){
+			        arrowStatics.push(false);
+			    }
+			var arrowCollisionLines=[];
+			    for(var i=0;i<arrowPoints.length;i++){
+			        arrowCollisionLines.push([i,(i+1)%arrowPoints.length]);
+			    }
+			
+			var arrowFrame=[];
+			    for(var i=0;i<arrowPoints.length;i++){
+			        arrowFrame.push(i);
+			    }
+			var arrowVolumeTriangles=[
+			    [0,1,2],
+			    [2,3,4],
+			    [4,2,5],
+			    [0,2,5],
+			    [0,5,6]
+			    ];
+			
+			return [arrowPoints,arrowStatics,arrowCollisionLines,arrowFrame,arrowVolumeTriangles];
+			};
+			/*
+			points,statics,collisionLines,springs,volumeTriangles,frame,damping,springStrength,volumeStrength,frameStrength,mass,layer,color
+			*/
+			var arrowOne=arrow(-500,0,100);
+			softBodies.push(new softBody(arrowOne[0],arrowOne[1],arrowOne[2],[],arrowOne[4],arrowOne[3],0.92,0.1,1,0.1,10,"rocket",randomColor()));
+			  
+			for(var i=0;i<89;i++){
+			    softBodies[softBodies.length-1].rotateFrame(1);
+			    softBodies[softBodies.length-1].addFrameForces();
+			    softBodies[softBodies.length-1].update(false,0);
+			}
+			
+			
+			
+			
+			
+			//}
+			
+			
+			
+			//}
+			
+			
+			
+			
+			
+			//particles
+			//{
+			var particles=[];
+			
+			var particle=function(pos,vel,c,timeLeft){
+			    this.pos=pos;
+			    this.vel=vel;
+			    this.c=c;
+			    this.timeLeft=timeLeft;
+			    this.startTime=timeLeft;
+			};
+			
+			particle.prototype.draw= function() {
+			    
+			    strokeWeight(15+10*(1-this.timeLeft/this.startTime));
+			    stroke(red(this.c),green(this.c),blue(this.c),sq(this.timeLeft/this.startTime)*50);
+			    var thisPointToCam=toCamPos(this.pos[0],this.pos[1]);
+			    point(thisPointToCam[0],thisPointToCam[1]);
+			    
+			    strokeWeight(5+10*(1-this.timeLeft/this.startTime));
+			    stroke(red(this.c),green(this.c),blue(this.c),sq(this.timeLeft/this.startTime)*200);
+			    var thisPointToCam=toCamPos(this.pos[0],this.pos[1]);
+			    point(thisPointToCam[0],thisPointToCam[1]);
+			    
+			     strokeWeight(10*(1-this.timeLeft/this.startTime));
+			    stroke(255,255,255,sq(this.timeLeft/this.startTime)*255);
+			    var thisPointToCam=toCamPos(this.pos[0],this.pos[1]);
+			    point(thisPointToCam[0],thisPointToCam[1]);    
+			};
+			
+			particle.prototype.update=function(){
+			    
+			    this.pos[0]+=this.vel[0];
+			    this.pos[1]+=this.vel[1];
+			    this.vel[0]*=0.95;
+			    this.vel[1]*=0.95;
+			    
+			    this.timeLeft-=1;
+			    return (this.timeLeft<=0);
+			};
+			
+			var particlesUpdate=function(){
+			    for(var i=0;i<particles.length;i++){
+			        particles[i].draw();
+			        if(particles[i].update()){
+			            particles.splice(i,1);
+			            i--;
+			        }
+			    }
+			
+			};
+			//}
+			
+			//stars
+			{
+			var stars=[];
+			var starsColor=[];
+			for(var i=0;i<200;i++){
+			    stars.push([random(0,width),random(0,height),random(0.1,10)]);
+			    starsColor.push(color(243-random(0,100), 247-random(0,100), random(0,250)));
+			}
+			
+			var drawStars= function() {
+			    
+			    for(var c=0;c<10;c++){
+			        strokeWeight(pow(c,1.5));
+			        
+			        for(var i=0;i<stars.length;i++){
+			            stroke(red(starsColor[i]),green(starsColor[i]),blue(starsColor[i]),1/sq(c)*200);
+			            point(stars[i][0],stars[i][1]);
+			            //stars[i][0]+=sin(millis()/100)/100;
+			            //stars[i][1]+=cos(millis()/100)/100;
+			            stars[i][0]+=(pcam[0]-cam[0])/400/stars[i][2];
+			            stars[i][1]+=(pcam[1]-cam[1])/400/stars[i][2];
+			            if(stars[i][0]>width+10){
+			                stars[i][0]-=width+20;
+			            }
+			            if(stars[i][1]>height+10){
+			                stars[i][1]-=height+20;
+			            }
+			            if(stars[i][0]<0-10){
+			                stars[i][0]+=width+20;
+			            }
+			            if(stars[i][1]<0-10){
+			                stars[i][1]+=height+20;
+			            }
+			            
+			        }
+			    }
+			};
+			}
+			
+			
+			draw= function() {
+			  
+			    
+			    background(0, 0, 0);
+			    
+			    drawStars();
+			    
+			    particlesUpdate();
+			    
+			    //softBody junk
+			    //{  
+			    for(var i=0;i<softBodies.length;i++){
+			        softBodies[i].update(false,0);
+			        softBodies[i].calculateBoundingBox();
+			    } 
+			   
+			    totalChecks=0;
+			    for(var i=0;i<softBodies.length;i++){
+			        for(var c=0;c<softBodies.length;c++){
+			            if(i!==c){
+			                softBodies[i].resolveCollisions(softBodies[c]);
+			            }
+			        }   
+			    }
+			    
+			    
+			    
+			    var camBoundingBox1=toCamPos(cam[0]+width/2-width/camZ/2,cam[1]+height/2-height/camZ/2);
+			    var camBoundingBox2=toCamPos(cam[0]+width/2+width/camZ/2,cam[1]+height/2+height/camZ/2);
+			    stroke(255, 0, 0);
+			    strokeWeight(15);
+			    point(camBoundingBox1[0],camBoundingBox1[1]);
+			    var countDrawn=0;
+			    for(var i=0;i<softBodies.length;i++){
+			        var camBoundingBox1=toCamPos(0,0);
+			        var camBoundingBox2=toCamPos(width,height);
+			      
+			        if(AABB([cam[0]+width/2-width/camZ/2,cam[1]+height/2-height/camZ/2,cam[0]+width/2+width/camZ/2,cam[1]+height/2+height/camZ/2],softBodies[i].boundingBox)){
+			            softBodies[i].draw(!true);
+			            countDrawn++;
+			        }
+			    }
+			  
+			    if(true){
+			        pcam=[cam[0]+0,cam[1]+0];
+			        cam=midPointOfPoints(rocket.points);
+			        
+			    var rocketCurrentVel=rocket.averageVelocity();   
+			        var d=sqrt(sq(rocketCurrentVel[0])+sq(rocketCurrentVel[1]));
+			        //cam[0]+=rocket.right()[0]*d*6;
+			        //cam[1]+=rocket.right()[1]*d*6;
+			        cam[0]-=width/2;
+			        cam[1]-=height/2;
+			    }
+			    
+			    
+			    //}
+			    
+			    
+			    //debug text
+			    if(debugText){
+			        fill(255, 255, 255,70);
+			        textSize(20);
+			        text("fps "+floor(this.__frameRate)+",\ncollisions "+totalChecks+"/"+sq(softBodies.length)+",\ndrawn "+countDrawn+"/"+softBodies.length+",\ncam pos "+floor(cam[0])+"x,"+floor(cam[1])+"y \nparticles "+particles.length,20,20);
+			    }
+			   
+			   
+			   //updating rocket positions
+			   //{
+			   var rocketForward=rocket.forward();
+			   var rocketRight=rocket.right();
+			   var rocketSpeed=3;
+			   
+			 
+			   rocket.addForce([constrain(keys[UP]*1-keys[DOWN]*1+keys[87]*1-keys[83]*1,-1,1)*rocketSpeed*rocketRight[0],
+			   constrain(keys[UP]*1-keys[DOWN]*1+keys[87]*1-keys[83]*1,-1,1)*rocketSpeed*rocketRight[1]]);
+			   var rocketCurrentVel=rocket.averageVelocity();
+			   var turnStrength=sqrt(sq(rocketCurrentVel[0])+sq(rocketCurrentVel[1]));
+			   var rocketCurrentVelValue=turnStrength;
+			   //}
+			
+			
+			    //spedometer
+			    //{
+			   fill(48, 48, 48,150);
+			   strokeWeight(4);
+			   stroke(0, 0, 0,100);
+			   ellipse(width-40,height-40,200,200);
+			   var speedAngle=rocketCurrentVelValue/70*120-15;
+			   
+			   stroke(190, 172, 212,100);
+			   line(width-40,height-40,width-cos(speedAngle)*80-40,height-sin(speedAngle)*80-40);
+			   noStroke();
+			    fill(76, 0, 168,200);
+			    bezier(width-40,height-40,
+			    width-cos(speedAngle+25)*30-40,height-sin(speedAngle+25)*30-40,
+			    width-cos(speedAngle+3)*60-40,height-sin(speedAngle+3)*60-40,
+			    width-cos(speedAngle)*80-40,height-sin(speedAngle)*80-40);
+			    
+			    bezier(width-40,height-40,
+			    width-cos(speedAngle-25)*30-40,height-sin(speedAngle-25)*30-40,
+			    width-cos(speedAngle-3)*60-40,height-sin(speedAngle-3)*60-40,
+			    width-cos(speedAngle)*80-40,height-sin(speedAngle)*80-40);
+			    
+			    
+			    fill(0, 0, 0,200);
+			    stroke(74, 74, 73,100);
+			    rect(width-75,height-105,50,30,30);
+			    fill(148, 148, 148,255);
+			    textSize(20);
+			   text((floor(rocketCurrentVelValue)<10?"0":"")+""+floor(rocketCurrentVelValue),width-61,height-82);
+			    //}
+			   
+			   
+			   
+			   //   87
+			   //65 83 68
+			   //rotatng rocket moving rocket and adding particles
+			   //{
+			   turnStrength=sqrt(turnStrength)/10;
+			   turnStrength/=2;
+			   rocket.rotateFrame(constrain(keys[RIGHT]*1-keys[LEFT]*1+keys[68]*1-keys[65]*1,-1,1)*turnStrength*10);
+			   if(turnStrength>0.1){
+			       camZ=0.3*(1-min(pow(turnStrength,1.5)*2,0.9));
+			       
+			        for(var i=0;i<10;i++){
+			       var outputPosition=midPointOfPoints(rocket.points);
+			      outputPosition[0]-=rocketRight[0]*59+random(-25,25);
+			       outputPosition[1]-=rocketRight[1]*59+random(-25,25);
+			       var rocketParticleSpeed=20;
+			       particles.push(new particle(outputPosition,
+			       [(rocketRight[0]*-10+random(-rocketParticleSpeed,rocketParticleSpeed))*sqrt(rocketCurrentVelValue)/10,
+			       (rocketRight[1]*-10+random(-rocketParticleSpeed,rocketParticleSpeed))*sqrt(rocketCurrentVelValue)/10],
+			       color(255+random(-30,0), random(0,200), random(0,100)),50+random(-50,10)));
+			        }
+			   }else{
+			       camZ=0.3*(1-min(pow(turnStrength,1.5)*2,0.9));
+			       //camZ=1;
+			   }
+			   
+			   rocket.addFrameForces();
+			   //}
+			  // pressure=1.5-(mouseX+1)/(width);
+			 
+			};
+			
+			
+			//inputs
+			//{
+			mouseDragged=function(){
+			    
+			    if(mouseButton===37){
+			        
+			        var dir=new vectorClass((mouseX-width/2),(mouseY-height/2));   
+			        var mouseXInWorldSpace=map(dir.x,-width/2,width/2,cam[0]+width/2-width/camZ/2,cam[0]+width/2+width/camZ/2);
+			        var mouseYInWorldSpace=map(dir.y,-height/2,height/2,cam[1]+height/2-height/camZ/2,cam[1]+height/2+height/camZ/2);
+			      
+			       for(var i=0;i<softBodies.length;i++){
+			           if(softBodies[i].insideObject([mouseXInWorldSpace,mouseYInWorldSpace])&&softBodies[i]!==rocket){
+			               var forceStrength=3;
+			              
+			               softBodies[i].addForce([(mouseX-pmouseX)*forceStrength,(mouseY-pmouseY)*forceStrength]);
+			           }
+			       }
+			    }
+			    
+			    if(mouseButton===3){
+			        cam[0]+=pmouseX-mouseX;
+			        cam[1]+=pmouseY-mouseY;
+			        
+			    }
+			};
+			keyReleased=function(){
+			    keys[keyCode]=false;
+			};
+			keyPressed=function(){
+			    keys[keyCode]=true;
+			};
+		}
+		
+		runPJS(program);
+		
+		// Add reload button on KA --> <script>
+		
+	</script>
+</body>
+
+</html>

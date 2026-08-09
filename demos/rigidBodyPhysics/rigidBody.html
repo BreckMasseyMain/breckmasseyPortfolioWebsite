@@ -1,0 +1,609 @@
+<!DOCTYPE html>
+<html lang="en">
+<!-- Program exported to HTML using the KA Project Exporter by @MushyAvocado 
+https://www.khanacademy.org/computer-programming/ka-project-exporter/5195486791385088
+-->
+	
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+	<title>SoftBodyRocket</title>
+	<style>
+		
+		
+		/* Change the color as you want */
+		:root {
+			--background-color: #000000;
+		}
+		
+		
+		html, body, #wrapper {
+			overflow: hidden;
+			width: 100%;
+		    height: 100%;
+			margin: 0px;
+			padding: 0px;
+		    width: calc(100% + 1px);
+		}
+		
+		body {
+		    background-color: var(--background-color);
+		}
+		
+		
+		canvas {
+			width: fit-content;
+			height: fit-content;
+		}
+		
+		canvas:focus {
+			outline: none;
+		}
+		
+		/* Automatically fits to the remaining height and centers the canvas it contains */
+		#wrapper {
+			padding: 0px;
+			margin: 0px;
+			display: flex;
+			justify-content: center;
+			align-items: center;
+			width: 100%;
+		}
+		
+</style>
+</head>
+<body id="wrapper">
+    <!-- Canvases with a class of "sketch" are applied to the program in the order runPJS() is called. -->
+    <canvas class="sketch"></canvas>
+	<!-- Load the PJS library -->
+	<script type="text/javascript" src="https://cdn.jsdelivr.net/gh/Khan/processing-js@master/processing.js"></script>
+	<!-- The exporter script must be loaded before the program script -->
+	<script type="text/javascript" src="https://cdn.jsdelivr.net/gh/Mushy-Avocado/KA-exporter@v1.0.1/exporter.js"></script>
+	<!-- Run Khan Academy program and import PJS -->
+	<script type="application/javascript">
+		
+		
+		function program() {
+		    
+		    title("SoftBodyRocket");
+		    size(600, 600);
+		    
+		    // All code goes here
+			//Credit: Breck Massey
+			//click on the game to start playing
+			//arrow keys to move.
+			
+			/*I have found that the program runs at very low frame rates if you don't resart it before you play.
+			
+			I am able to run this at 60 fps with an intel i5 8 gigs of ram and the built in intel graphics card (I know that this is running all of the calculations on the cpu not gpu).
+			*/
+			/*todo:
+			make level editor and levels
+			*/
+			var egg=false;
+			//math stuff
+			{
+			var dot=function(vecA,vecB){
+			  return vecA[0]*vecB[0]+vecA[1]*vecB[1];  
+			};
+			
+			var closestPointOnLine=function(linePoses,pointPos){
+			//credit
+			//https://monkeyproofsolutions.nl/wordpress/how-to-calculate-the-shortest-distance-between-a-point-and-a-line/
+			  var m=[linePoses[0]-linePoses[2],linePoses[1]-linePoses[3]];
+			  var t=dot(m, [pointPos[0] - linePoses[0],pointPos[1] - linePoses[1]]) / dot(m, m);
+			  t=constrain(t,-1,0);
+			  var intersectPnt =[linePoses[0] + t * m[0],linePoses[1] + t * m[1]];
+			  return intersectPnt;
+			    
+			};
+			
+			var lineLineCollisions=function(x1,y1,x2,y2,x3,y3,x4,y4){
+			    var den=(x1-x2)*(y3-y4)-(y1-y2)*(x3-x4);
+			    if(den===0){
+			        return [false];
+			    }
+			    var t=((x1-x3)*(y3-y4)-(y1-y3)*(x3-x4))/den;
+			    var u=-((x1-x2)*(y1-y3)-(y1-y2)*(x1-x3))/den;
+			   
+			    if(t>=0&&t<=1&&u>=0&&u<=1){
+			    var pt=new PVector();
+			        pt.x=x1+t*(x2-x1);
+			        pt.y=y1+t*(y2-y1);
+			         strokeWeight(4);
+			
+			        return [1,pt];
+			    }else{
+			        return [false];
+			    }
+			};
+			}
+			
+			var camPos=[0,0];
+			//collisions objects
+			{
+			var collisionObject=function(points,colors,name,properties){
+			this.name=name;
+			this.points=points;
+			this.colors=colors;
+			this.properties=properties;//0-bounce
+			this.objectWidth=0;
+			this.objectHeight=0;
+			var minPosx=Infinity;
+			var maxPosx=-Infinity;
+			var minPosy=Infinity;
+			var maxPosy=-Infinity;
+			for(var i=0;i<this.points.length;i++){
+			    minPosx=min(minPosx,this.points[i][0]);
+			    minPosy=min(minPosy,this.points[i][1]);
+			    maxPosx=max(maxPosx,this.points[i][0]);
+			    maxPosy=max(maxPosy,this.points[i][1]);
+			}
+			this.objectWidth=maxPosx-minPosx;
+			this.objectHeight=maxPosy-minPosy;
+			this.middlePos=[(maxPosx+minPosx)/2,(maxPosy+minPosy)/2];
+			};
+			collisionObject.prototype.draw= function() {
+			    fill(this.colors[0]);
+			    stroke(this.colors[1]);
+			    strokeWeight(this.colors[2]);
+			    
+			  //  fill(this.colors[0],this.colors[1],this.colors[2]);
+			//    stroke(this.colors[3],this.colors[4],this.colors[5]);
+			 //   strokeWeight(this.colors[6]);
+			    beginShape();
+			    for(var i=0;i<this.points.length;i++){
+			        vertex(this.points[i][0]-camPos[0],this.points[i][1]-camPos[1]);
+			    }
+			    vertex(this.points[0][0]-camPos[0],this.points[0][1]-camPos[1]);
+			    endShape();
+			};
+			collisionObject.prototype.pointCollision=function(checkPoint){
+			var lineCollisions=0;
+			var closestPoint=[0,0];
+			var distToPoint=Infinity;
+			var hit=false;
+			var addX=checkPoint[0]-this.middlePos[0]+this.objectWidth;
+			var newDist=0;
+			var checkPos;
+			if(checkPoint[0]>this.middlePos[0]-this.objectWidth/2&&checkPoint[1]>this.middlePos[1]-this.objectHeight/2&&checkPoint[0]<this.middlePos[0]+this.objectWidth/2&&checkPoint[1]<this.middlePos[1]+this.objectHeight/2){
+			    for(var i=0;i<this.points.length-1;i++){
+			       var lineHit= lineLineCollisions(this.points[i][0],this.points[i][1],this.points[i+1][0],this.points[i+1][1],checkPoint[0],checkPoint[1],checkPoint[0]-addX,checkPoint[1]);
+			       if(lineHit[0]===1){
+			           
+			           lineCollisions++;
+			           
+			       }
+			       checkPos=closestPointOnLine([this.points[i][0],this.points[i][1],this.points[i+1][0],this.points[i+1][1]],checkPoint);
+			           if(dist(checkPos[0],checkPos[1],checkPoint[0],checkPoint[1])<distToPoint){
+			               distToPoint=dist(checkPos[0],checkPos[1],checkPoint[0],checkPoint[1]);
+			               closestPoint=checkPos;
+			           }
+			    }
+			    var lineHit= lineLineCollisions(this.points[0][0],this.points[0][1],this.points[this.points.length-1][0],this.points[this.points.length-1][1],checkPoint[0],checkPoint[1],checkPoint[0]-addX,checkPoint[1]);
+			       if(lineHit[0]===1){
+			           lineCollisions++;
+			       }
+			        checkPos=closestPointOnLine([this.points[0][0],this.points[0][1],this.points[this.points.length-1][0],this.points[this.points.length-1][1]],checkPoint);
+			           if(dist(checkPos[0],checkPos[1],checkPoint[0],checkPoint[1])<distToPoint){
+			               distToPoint=dist(checkPos[0],checkPos[1],checkPoint[0],checkPoint[1]);
+			               closestPoint=checkPos;
+			           }
+			    
+			}else{
+			    hit=false;
+			}
+			
+			if(lineCollisions>0&&lineCollisions%2===1){
+			    hit=true;
+			}
+			
+			return [hit,closestPoint];
+			};
+			
+			collisionObject.prototype.closestPoint=function(checkPoint){
+			var distToPoint=Infinity;
+			var closestPoint=[0,0];
+			var addX=checkPoint[0]-this.middlePos[0]+this.objectWidth;
+			var newDist=0;
+			var checkPos;
+			
+			    for(var i=0;i<this.points.length-1;i++){
+			       checkPos=closestPointOnLine([this.points[i][0],this.points[i][1],this.points[i+1][0],this.points[i+1][1]],checkPoint);
+			           if(dist(checkPos[0],checkPos[1],checkPoint[0],checkPoint[1])<distToPoint){
+			               distToPoint=dist(checkPos[0],checkPos[1],checkPoint[0],checkPoint[1]);
+			               closestPoint=checkPos;
+			           }
+			    }
+			    
+			        checkPos=closestPointOnLine([this.points[0][0],this.points[0][1],this.points[this.points.length-1][0],this.points[this.points.length-1][1]],checkPoint);
+			           if(dist(checkPos[0],checkPos[1],checkPoint[0],checkPoint[1])<distToPoint){
+			               distToPoint=dist(checkPos[0],checkPos[1],checkPoint[0],checkPoint[1]);
+			               closestPoint=checkPos;
+			           }
+			    
+			return closestPoint;
+			};
+			
+			collisionObject.prototype.recalculateSize=function(){
+			var minPosx=Infinity;
+			var maxPosx=-Infinity;
+			var minPosy=Infinity;
+			var maxPosy=-Infinity;
+			for(var i=0;i<this.points.length;i++){
+			    minPosx=min(minPosx,this.points[i][0]);
+			    minPosy=min(minPosy,this.points[i][1]);
+			    maxPosx=max(maxPosx,this.points[i][0]);
+			    maxPosy=max(maxPosy,this.points[i][1]);
+			}
+			this.objectWidth=maxPosx-minPosx;
+			this.objectHeight=maxPosy-minPosy;
+			this.middlePos=[(maxPosx+minPosx)/2,(maxPosy+minPosy)/2];
+			
+			};
+			collisionObject.prototype.onScreen=function(){
+			if(this.middlePos[0]-this.objectWidth/2-camPos[0]<width&&this.middlePos[0]+this.objectWidth/2-camPos[0]>0&&this.middlePos[1]-this.objectHeight/2-camPos[1]<height&&this.middlePos[1]+this.objectHeight/2-camPos[1]>0){
+			    return true;
+			}else{
+			    return false;
+			}
+			};
+			
+			var objects=[];
+			
+			var createCog=function(pCount,radius,spikes,rOffset,pos,dem){
+			    var outputPoints=[];
+			    var r=0;
+			    var rChange=360/(pCount);
+			    var s=4*spikes;
+			 
+			for(var i=1;i<pCount;i++){
+			    outputPoints.push([(sin(r+rOffset)*(radius+sin(i/pCount*s*90)*radius/10))*dem[0]+pos[0],(cos(r+rOffset)*(radius+sin(i/pCount*s*90)*radius/10))*dem[1]+pos[1]]);
+			    r=i*rChange;
+			}
+			return outputPoints;
+			};
+			var creatWave=function(res,dem,pos,w,a,hilla,offset){
+			    var outputPoints=[];
+			    for(var i=0;i<res;i++){
+			        outputPoints.push([(i/res)*dem[0]+pos[0],(sin((i/res)*w+offset))*a+(cos((i/res)*w*10+offset*10))*hilla+pos[1]]);
+			    }
+			    outputPoints.push([outputPoints[outputPoints.length-1][0],pos[1]+a+dem[1]]);
+			    outputPoints.push([pos[0],pos[1]+a+dem[1]]);
+			    return outputPoints;
+			};
+			
+			var startLevel=function(){
+			var points=[
+			    [200,100],[310,310],[150,350],[150,250],[50,250]
+			];
+			var colors=[color(237, 237, 237),color(125,125,125,255),3];
+			//objects.push(new collisionObject(points,colors,"test object"));
+			points=createCog(100,100,15,frameCount,[100,300],[1,1]);
+			
+			objects.push(new collisionObject(points,colors,"cog",[1]));
+			
+			points=createCog(100,100,15,-frameCount,[300,300],[1,1]);
+			
+			objects.push(new collisionObject(points,colors,"cog 2",[1]));
+			
+			colors=[color(24, 201, 74),color(17, 138, 49),4];
+			//res,dem,pos,w,a,offset
+			points=creatWave(100,[500,100],[499,0],1000,10,0);
+			objects.push(new collisionObject(points,colors,"wavy grass",[2]));
+			
+			colors=[color(140, 122, 245),color(84, 73, 153),2];
+			points=[
+			    [0,300],[125,270],[125,300],[275,300],[275,270],[400,300],[400,200],[325,200],[325,175],[400,175],[400,100],[500,0],[700,50],[600,200],[500,400],[500,400],[-100,400],[-100,0],[0,0],[0,175],[75,175],[75,200],[0,200]
+			];
+			objects.push(new collisionObject(points,colors,"main first room",[1]));
+			
+			colors=[color(255, 8, 8),color(168, 0, 0),2];
+			
+			points=[
+			    [150,150],[250,150],[250,175],[150,175]
+			];
+			objects.push(new collisionObject(points,colors,"middle block",[2]));
+			
+			
+			
+			
+			};
+			startLevel();
+			
+			}
+			
+			
+			var findCollisionObjectWithName=function(findName){
+			var found=false;
+			var spot=0;
+			for(var i=0;i<objects.length;i++){
+			    if(objects[i].name===findName){
+			        found=true;
+			        spot=i;
+			        break;
+			    }
+			}
+			return [found,spot];
+			};
+			
+			//player/rigidbody stuff
+			{
+			var playerF=function(name,colors,points,collider){
+			    this.vel=[0,0];
+			    this.grouned=false;
+			    this.name=name;
+			    this.colors=colors;
+			   this.points=points;
+			   this.collider=collider;
+			};
+			playerF.prototype.move=function(x,y){
+			    
+			  for(var i=0;i<this.points.length;i++){
+			    this.points[i][0]+=x;
+			    this.points[i][1]+=y;
+			  }
+			};
+			playerF.prototype.draw= function() {
+			    fill(this.colors[0]);
+			    stroke(this.colors[1]);
+			    strokeWeight(this.colors[2]);
+			    if(this.points.length<3){
+			        strokeWeight(10);
+			        stroke(0, 0, 0);
+			    }
+			    
+			    beginShape();
+			    for(var i=0;i<this.points.length;i++){
+			        vertex(this.points[i][0]-camPos[0],this.points[i][1]-camPos[1]);
+			    }
+			    vertex(this.points[0][0]-camPos[0],this.points[0][1]-camPos[1]);
+			    endShape();
+			    
+			    if(this.collider){
+			        var playerCollider=findCollisionObjectWithName(this.name);
+			        if(playerCollider[0]){
+			            objects[playerCollider[1]].points=this.points;
+			            objects[playerCollider[1]].recalculateSize();
+			            
+			        }else{
+			            
+			            
+			            var colors=[color(255, 255, 255,0),color(168, 0, 0,0),0];
+			
+			
+			objects.push(new collisionObject(this.points,colors,this.name,[1]));
+			
+			            
+			        }
+			    }
+			};
+			playerF.prototype.movement=function(){
+			 
+			       if(this.hitGround===true){
+			        this.grounded=true;
+			        this.hitGround=false;
+			    }else{
+			        this.grounded=false;
+			    }
+			       
+			     this.vel[1]+=0.9;
+			  
+			    this.move(this.vel[0],this.vel[1]);
+			    if(this.grounded===true){
+			    this.vel[0]*=0.9;
+			    }else{
+			        this.vel[0]*=0.9;
+			    }
+			    
+			    this.vel[1]*=0.9;
+			};
+			playerF.prototype.midPos=function(){
+			    var mid=[0,0];
+			    for(var i=0;i<this.points.length;i++){
+			        mid[0]+=this.points[i][0];
+			        mid[1]+=this.points[i][1];
+			    }
+			    mid[0]/=this.points.length;
+			    mid[1]/=this.points.length;
+			    
+			return mid;
+			};
+			
+			var people=[];
+			var creatPlayerModel=function(pos,res,r){
+			    var playerPoints=[];
+			    
+			    var a=4*res*40;
+			    for(var i=0;i<res;i++){
+			        playerPoints.push([pos[0]+sin(i/res*360)*r,pos[1]+cos(i/res*360)*r]);
+			    }
+			    return playerPoints;
+			};
+			var createBlock=function(pos,dem,res){
+			  var playerPoints=[];
+			  for(var i=0;i<res;i++){
+			        playerPoints.push([i/res*dem[0]+pos[0],0+pos[1]]);
+			  }
+			  for(var i=0;i<res;i++){
+			        playerPoints.push([dem[0]+pos[0],i/res*dem[1]+pos[1]]);
+			  }for(var i=0;i<res;i++){
+			        playerPoints.push([dem[0]-i/res*dem[0]+pos[0],dem[1]+pos[1]]);
+			  }for(var i=0;i<res;i++){
+			        playerPoints.push([0+pos[0],dem[1]-i/res*dem[1]+pos[1]]);
+			  }
+			  return playerPoints;
+			};
+			if(egg){
+			var playersPoints=createCog(50,5,3,155,[200,0],[1,1.3]);
+			}else{
+			   var playersPoints=creatPlayerModel([200,0],10,5); 
+			//var playersPoints=createBlock([random(0,600),0],[10,10],10);
+			
+			}
+			people.push(new playerF("player",[color(250, 219, 165),color(173, 153, 117),2],playersPoints,true));
+			
+			for(var i=0;i<1;i++){
+			
+			//people.push(new playerF("random particle "+i,[color(148, 148, 148),color(54, 54, 54),2],createBlock([random(0,600),0],[10,10],10),true));
+			people.push(new playerF("random particle "+i,[color(148, 148, 148),color(54, 54, 54),2],creatPlayerModel([random(0,400),0],10,10),true));
+			
+			}
+			var findPeopleObjectWithName=function(findName){
+			var found=false;
+			var spot=0;
+			for(var i=0;i<people.length;i++){
+			    if(people[i].name===findName){
+			        found=true;
+			        spot=i;
+			        break;
+			    }
+			}
+			return [found,spot];
+			};
+			}
+			
+			
+			var keys=[];
+			draw= function() {
+			    background(255, 255, 225);
+			 
+			   
+			   var hitGround=false; 
+			   var objectsOnScreen=0;
+			   
+			    for(var i=0;i<objects.length;i++){
+			        if(objects[i].onScreen()){
+			        objects[i].draw();
+			        objectsOnScreen++;
+			    for(var c=0;c<people.length;c++){
+			        
+			        if(objects[i].name!==people[c].name){
+			        for(var d=0;d<people[c].points.length;d++){
+			            
+			            var check=objects[i].pointCollision(people[c].points[d]);
+			        
+			        if(check[0]){
+			           
+			            people[c].vel[0]-=(people[c].points[d][0]-check[1][0])*objects[i].properties[0] ;
+			            people[c].vel[1]-=(people[c].points[d][1]-check[1][1])*objects[i].properties[0] ;
+			            if(people[c].points[d][1]-check[1][1]>(people[c].points[d][0]-check[1][0])){
+			                 people[c].hitGround=true;
+			            
+			            }
+			            people[c].move(check[1][0]-people[c].points[d][0],check[1][1]-people[c].points[d][1]);
+			            
+			           
+			        }
+			            
+			        }
+			        }
+			    }
+			    
+			        }
+			    }
+			    
+			    for(var i=0;i<people.length;i++){
+			        
+			       people[i].movement();
+			    people[i].draw();
+			  
+			    }    
+			    
+			    
+			    
+			    
+			   
+			    //player inputs
+			    {
+			    var playerNumber=findPeopleObjectWithName("player");
+			    if(playerNumber[0]){
+			    var speed=0.5;
+			    var jumpForce=10;
+			    if(keys[UP]&&people[playerNumber[1]].grounded){
+			        people[playerNumber[1]].vel[1]-=jumpForce;
+			        people[playerNumber[1]].grounded=true;
+			        
+			    }
+			    
+			     if(keys[RIGHT]){
+			        people[playerNumber[1]].vel[0]+=speed;
+			    }
+			    if(keys[LEFT]){
+			        people[playerNumber[1]].vel[0]-=speed;
+			    }
+			   
+			    }
+			    
+			    
+			camPos[0]+=(camPos[0]-people[playerNumber[1]].midPos()[0]+width/2)/-10;
+			camPos[1]+=(camPos[1]-people[playerNumber[1]].midPos()[1]+height/2)/-10;
+			    
+			   }
+			  
+			    
+			    fill(0, 0, 0,100);
+			    noStroke();
+			    rect(0,0,30,30);
+			    textSize(20);
+			    fill(255, 255, 255);
+			    text(round(this.__frameRate),5,20);
+			    
+			    
+			    var cogRes=100;
+			    var cogNumber=findCollisionObjectWithName("cog");
+			    if(cogNumber[0]===true){
+			        var cogPoints=[];
+			        cogPoints=createCog(cogRes,75,15,frameCount,[200-75,300],[1,1]);
+			
+			        objects[cogNumber[1]].points=cogPoints;
+			        objects[cogNumber[1]].recalculateSize();
+			    }
+			    var cogNumber=findCollisionObjectWithName("cog 2");
+			    if(cogNumber[0]===true){
+			        var cogPoints=[];
+			        cogPoints=createCog(cogRes,75,15,-frameCount+5,[200+75,300],[1,1]);
+			
+			        objects[cogNumber[1]].points=cogPoints;
+			        objects[cogNumber[1]].recalculateSize();
+			    }
+			    
+			    var middleBlockNumber=findCollisionObjectWithName("middle block");
+			    if(middleBlockNumber[0]===true){
+			        
+			        var newPoints=[
+			        [150,120-sin(frameCount*3)*10],[250,120+sin(frameCount*3)*10],[250,145+sin(frameCount*3)*10],[150,145-sin(frameCount*3)*10]
+			]; 
+			        objects[middleBlockNumber[1]].points=newPoints;
+			        objects[middleBlockNumber[1]].recalculateSize();
+			
+			    }    
+			    
+			    
+			     var wavyGrassNumber=findCollisionObjectWithName("wavy grass");
+			    if(wavyGrassNumber[0]===true){
+			        
+			        var newPoints=creatWave(100,[500,100],[499,40],200,0,10,-frameCount);
+			        objects[wavyGrassNumber[1]].points=newPoints;
+			        objects[wavyGrassNumber[1]].recalculateSize();
+			
+			    }    
+			    
+			    
+			};
+			keyReleased=function(){
+			keys[keyCode]=false;
+			};
+			keyPressed=function(){
+			keys[keyCode]=true;
+			};
+		}
+		
+		runPJS(program);
+		
+		// Add reload button on KA --> <script>
+		
+	</script>
+</body>
+
+</html>

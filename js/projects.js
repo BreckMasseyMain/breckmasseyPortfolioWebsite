@@ -102,6 +102,84 @@ const PROJECTS = {
       ],
     },
     {
+      id: "softBodyPhysicsEngine",
+      title: "Soft Body Physics Engine",
+      date: "2024",
+      image: "assets/images/physics/softbodyPhysics.PNG",
+      summary: "2D soft body physics engine capable of complex shapes.",
+      sections: [
+        {
+          title: "Overview",
+          blocks: [
+            {
+              type: "p",
+              text: "After playing Jelly Car I wanted to create similar physics where everything is similar to Jell-O. Similar to my rigid body project, this project is a 2D physics engine which can handle complex colliders but everything acts like a soft body.",
+            },
+          ]
+        },
+        {
+          title: "Technique",
+          blocks: [
+            {
+              type: "p",
+              text: "Each object is a polygon. To detect if a point is in a polygon you cast a ray from the point out to another point in infinity. Then count how many intersections there are between the point and the polygon. If the number of intersections is even the point is outside of the polygon. If it is odd the point is inside. To resolve the collision you find the closest point on the polygon and move the point there. Also adjust the polygon accordingly. It is relatively simple and can create complex results.",
+            }
+          ],
+        },
+        {
+          title: "Demo",
+          blocks: [
+            {
+              type: "embed",
+              src: "demos/softBodyPhysics/softBody.html",
+              title: "Soft Body Physics Engine",
+              height: 640,
+              caption: "Click the game, then use arrow keys.",
+            }
+          ],
+        },
+      ],
+    },
+    {
+      id: "rigidBodyPhysics",
+      title: "Rigid Body Physics Engine",
+      date: "2023",
+      image: "assets/images/physics/rigidBodyPhysics.PNG",
+      summary: "2D rigid body physics engine capable of complex shapes.",
+      sections: [
+        {
+          title: "Overview",
+          blocks: [
+            {
+              type: "p",
+              text: "I have always loved programming video games, but I would always get stumped when it came to the physics engine. Specifically collisions and collision resolution. In this project I built a 2D physics engine which can handle complex colliders. ",
+            },
+          ]
+        },
+        {
+          title: "Technique",
+          blocks: [
+            {
+              type: "p",
+              text: "Each object is a polygon. To detect if a point is in a polygon you cast a ray from the point out to another point in infinity. Then count how many intersections there are between the point and the polygon. If the number of intersections is even the point is outside of the polygon. If it is odd the point is inside. To resolve the collision you find the closest point on the polygon and move the point there. It is relatively simple and can create complex results.",
+            }
+          ],
+        },
+        {
+          title: "Demo",
+          blocks: [
+            {
+              type: "embed",
+              src: "demos/rigidBodyPhysics/rigidBody.html",
+              title: "Rigid Body Physics Engine",
+              height: 640,
+              caption: "Click the game, then use arrow keys.",
+            }
+          ],
+        },
+      ],
+    },
+    {
       id: "voxelRenderingTechniques",
       title: "Voxel Rendering Techniques",
       date: "",
@@ -932,7 +1010,7 @@ const PROJECTS = {
 
 const CATEGORIES = {
   voxels: {
-    title: "Voxels",
+    title: "Game Technology",
     blurb: "Chunked worlds, meshing, and tools for shaping blocky space.",
   },
   circuitry: {

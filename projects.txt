@@ -6,7 +6,6 @@ everything up top jumps around which switching pages
 
 Projects:
 FPGA computer
-physics
 
 UROP
 
