@@ -594,6 +594,7 @@ const PROJECTS = {
               type: "image",
               src: "assets/images/jamIt/homePage.webp",
               alt: "Jam It! home page",
+              aspectRatio: "9 / 16"
             },
           ],
         },
