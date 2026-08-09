@@ -189,6 +189,41 @@ const PROJECTS = {
     },
   ],
   circuitry: [
+    /* 
+    {
+      id: "sensor-suite",
+      title: "RISC-V computer and Graphics Card",
+      date: "Summer 2026",
+      image: "assets/images/sensor-suite.svg",
+      summary: "A custom computer running on an FPGA",
+      sections: [
+        {
+          title: "Overview",
+          blocks: [
+            {
+              type: "p",
+              text: "This suite bundles temperature, ambient light, and motion sensors into one Arduino-based logger with a shared sampling loop.",
+            },
+            {
+              type: "image",
+              src: "assets/images/sensor-suite.svg",
+              alt: "Sensor suite board",
+            },
+          ],
+          subsections: [
+            {
+              title: "Logging",
+              blocks: [
+                {
+                  type: "p",
+                  text: "Readings are timestamped and written to serial for later graphing. Calibration helpers keep raw values closer to real-world units.",
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    },*/
     {
       id: "6502 Game Console",
       title: "6502 Game Console",
@@ -440,173 +475,89 @@ const PROJECTS = {
         },
       ],
     },
-    {
-      id: "sensor-suite",
-      title: "Arduino Sensor Suite",
-      date: "October 2024",
-      image: "assets/images/sensor-suite.svg",
-      summary: "Temperature, light, and motion sensors wired into a unified logger.",
-      sections: [
-        {
-          title: "Overview",
-          blocks: [
-            {
-              type: "p",
-              text: "This suite bundles temperature, ambient light, and motion sensors into one Arduino-based logger with a shared sampling loop.",
-            },
-            {
-              type: "image",
-              src: "assets/images/sensor-suite.svg",
-              alt: "Sensor suite board",
-            },
-          ],
-          subsections: [
-            {
-              title: "Logging",
-              blocks: [
-                {
-                  type: "p",
-                  text: "Readings are timestamped and written to serial for later graphing. Calibration helpers keep raw values closer to real-world units.",
-                },
-              ],
-            },
-          ],
-        },
-      ],
-    },
-    {
-      id: "pcb-experiment",
-      title: "Custom PCB Experiment",
-      date: "August 2024",
-      image: "assets/images/pcb-experiment.svg",
-      summary: "A first-pass PCB layout for a compact GPIO breakout board.",
-      sections: [
-        {
-          title: "Overview",
-          blocks: [
-            {
-              type: "p",
-              text: "Custom PCB Experiment documents a first fab run: schematic capture, board layout, and silkscreen decisions for a compact GPIO breakout.",
-            },
-            {
-              type: "image",
-              src: "assets/images/pcb-experiment.svg",
-              alt: "PCB layout",
-            },
-          ],
-          subsections: [
-            {
-              title: "Lessons learned",
-              blocks: [
-                {
-                  type: "p",
-                  text: "Lessons learned included clearer connector labeling, better spacing around mounting holes, and simpler power-rail routing.",
-                },
-              ],
-            },
-          ],
-        },
-      ],
-    },
   ],
   games: [
     {
-      id: "platformer",
-      title: "Platformer Prototype",
-      date: "April 2025",
-      image: "assets/images/platformer.svg",
-      summary: "Tight jump physics, coyote time, and a short vertical level slice.",
+      id: "jamit",
+      title: "Jam It!",
+      date: "January 2026",
+      image: "assets/images/jamIt/JamItCover.png",
+      summary: "The ultimate song guessing game designed to test your music knowledge",
       sections: [
         {
           title: "Overview",
           blocks: [
             {
               type: "p",
-              text: "Platformer Prototype focuses on feel: coyote time, jump buffering, and consistent gravity so movement remains readable under pressure.",
+              text: "[Jam It!](https://jamit-ios.com/) is a IOS game built around guessing a song you are listening to. There are multiple game modes such as a kahoot style game, a pass and play game mode, and a matching game mode. This project was developed with two of my friends, Dominik Grzeszczak and Jan Szmajda, over MIT's winter break (which includes all of January). We applied for a MIT YC program which would give students of MIT funding and guidance over MIT's winter break to build some sort of app. We were not accepted; However, they decided to give us all of the resources for us to use. Since, they decided to give us the all of the resources, we decided we would spend winter break building an app, and this was what we made.",
             },
             {
               type: "image",
-              src: "assets/images/platformer.svg",
-              alt: "Platformer level slice",
-            },
-          ],
-          subsections: [
-            {
-              title: "Vertical slice",
-              blocks: [
-                {
-                  type: "p",
-                  text: "A short vertical slice teaches wall jumps and timed hazards without a full campaign. Particle feedback and camera shake stay subtle so they support readability.",
-                },
-              ],
+              src: "assets/images/jamIt/homePage.webp",
+              alt: "Jam It! home page",
             },
           ],
         },
       ],
     },
     {
-      id: "puzzle-adventure",
-      title: "Puzzle Adventure Demo",
-      date: "December 2024",
-      image: "assets/images/puzzle-adventure.svg",
-      summary: "Environmental puzzles, inventory items, and a quiet narrative beat.",
+      id: "WaddlesAndWiggles",
+      title: "Waddle's and Wiggle's Wild Dash to the Way Out",
+      date: "February 2025",
+      image: "assets/images/waddlesAndWiggles/gamePlay.png",
+      summary: "2D local multiplayer platformer",
       sections: [
         {
           title: "Overview",
           blocks: [
             {
               type: "p",
-              text: "Puzzle Adventure Demo pairs room-scale puzzles with a lightweight inventory and short narrative moments.",
-            },
-            {
-              type: "image",
-              src: "assets/images/puzzle-adventure.svg",
-              alt: "Puzzle room",
+              text: "[Waddle's and Wiggle's Wild Dash to the Way Out](https://bcmassey.itch.io/waddles-and-wiggles-wild-dash-to-the-way-out) is a 2D platfomer game where the world is ending. At the end of the level there is a spaceship that will carry passengers to safety, but there is only one seat left. The two players have to race for the spot. As the players race through the world, the world crumbles behind them! There are many different power ups scattered throughout the map. It was made for the TSA video game competition in collaboration with Jack Marris.",
             },
           ],
-          subsections: [
+        },
+        {
+          title: "Development",
+          blocks: [
             {
-              title: "Interaction language",
-              blocks: [
-                {
-                  type: "p",
-                  text: "Objects have clear affordances: key items unlock paths, while pressure plates and light beams form the core interaction language.",
-                },
-              ],
+              type: "p",
+              text: "This game was developed in the Unity Game Engine, but do to many shortcomings of Unity's tools a lot of systems were built from scratch. For example, the 2D tile set tools Unity has by default had many issues such as small gaps between tiles. The default system also did not work with our destructible terrain. Instead, we made our own tile system. At the start of the game, a mesh is made for each level. In the mesh each set of two triangles represents one tile. Different levels could have their own tile sets, and when a level was destroyed it was very easy to move the tiles however we wanted. Since we made our own tile system we also had to make our own collision system. For the collision system I just rebuilt what I did for my 6502 computer.",
             },
           ],
         },
       ],
     },
     {
-      id: "arena-sketch",
-      title: "Multiplayer Arena Sketch",
-      date: "September 2024",
-      image: "assets/images/arena-sketch.svg",
-      summary: "A small arena layout and placeholder combat loop for local playtests.",
+      id: "KingdomChaos",
+      title: "Kingdom Chaos",
+      date: "February 2024",
+      image: "assets/images/kingdom/gamePlay.png",
+      summary: "A chess themed bullet hell",
       sections: [
         {
           title: "Overview",
           blocks: [
             {
               type: "p",
-              text: "Multiplayer Arena Sketch is an early combat sandbox: spawn points, cover geometry, and a placeholder ability kit for local playtests.",
-            },
-            {
-              type: "image",
-              src: "assets/images/arena-sketch.svg",
-              alt: "Arena layout",
+              text: "[Kingdom Chaos](https://bcmassey.itch.io/kingdom-chaos) is a 2d platformer bullet hell with a chess theme. You play as a pawn, and you are the only one left in your army. Your king has asked you to defeat the enemy army and protect him. You then go off and complete a series of boss fights to save your king. This game was made for the TSA Video Game competition with Jack Marris. This game ended up winning 2nd place!",
             },
           ],
-          subsections: [
+        },
+      ],
+    },
+    {
+      id: "TheWonderousWorld",
+      title: "The Wonderous World",
+      date: "February 2022",
+      image: "assets/images/wonderworld/gamePlay.png",
+      summary: "A 2D platformer based around the Wonders of the World.",
+      sections: [
+        {
+          title: "Overview",
+          blocks: [
             {
-              title: "Playtests",
-              blocks: [
-                {
-                  type: "p",
-                  text: "Netcode is stubbed out so design work can proceed with split-screen or hot-seat sessions first. Balance passes will follow once core movement and targeting feel stable.",
-                },
-              ],
+              type: "p",
+              text: "[The Wonderous World](https://bcmassey.itch.io/the-wonderous-world) is a 2D platformer where you play as an adventurer collecting artifacts from the 7 Wonders of the World for a museum. Be careful, other adventurers are also trying to collect the artifacts! This game was developed for the TSA Video Game competition.",
             },
           ],
         },
@@ -615,33 +566,244 @@ const PROJECTS = {
   ],
   other: [
     {
-      id: "site-tools",
-      title: "Personal Site Tools",
-      date: "May 2025",
-      image: "assets/images/site-tools.svg",
-      summary: "Small scripts and helpers used while building this portfolio.",
+      id: "desmos",
+      title: "Desmos Graphs",
+      date: "",
+      image: "assets/images/desmos/mandelbrot.png",
+      summary: "A collection of cool graphs I have made in the Desmos graphing calculator",
       sections: [
         {
           title: "Overview",
           blocks: [
             {
               type: "p",
-              text: "Personal Site Tools collects tiny helpers for scaffolding pages, optimizing SVGs, and checking local links.",
-            },
+              text: "Desmos is a powerful graphing calculator. Here are some of the cool desmos graphs I have made.",
+            }
+          ],
+        },
+        {
+          title: "Mandelbrot",
+          blocks: [
             {
               type: "image",
-              src: "assets/images/site-tools.svg",
-              alt: "Site tools",
+              src: "assets/images/desmos/mandelbrot.png",
+              alt: "Mandelbrot graph",
+            },
+            {
+              type: "p",
+              text: "[A graph of the mandelbrot fractal.](https://www.desmos.com/calculator/yqxevx1wje) ",
+            }
+          ],
+        },
+        {
+          title: "MIT Dome",
+          blocks: [
+            {
+              type: "image",
+              src: "assets/images/desmos/mitDome.png",
+              alt: "Mit Dome graph",
+            },
+            {
+              type: "p",
+              text: "[A graph drawing of the MIT Dome with fireworks in background.](https://www.desmos.com/calculator/5oohertnty) ",
+            }
+          ],
+        },
+        {
+          title: "Golf Game",
+          blocks: [
+            {
+              type: "image",
+              src: "assets/images/desmos/golf.png",
+              alt: "Golf game graph",
+            },
+            {
+              type: "p",
+              text: "[A golf game in desmos.](https://www.desmos.com/calculator/s75lspeotr) ",
+            }
+          ],
+        },
+        {
+          title: "Mountain sunrise",
+          blocks: [
+            {
+              type: "image",
+              src: "assets/images/desmos/mountains.png",
+              alt: "Mountain graph",
+            },
+            {
+              type: "p",
+              text: "[A graph of mountains with a rising sun.](https://www.desmos.com/calculator/tnhrnwuln1) ",
+            }
+          ],
+        },
+        {
+          title: "3D Utah Teapot in 2D Graph",
+          blocks: [
+            {
+              type: "image",
+              src: "assets/images/desmos/utahteapot.png",
+              alt: "3D Utah Teapot graph",
+            },
+            {
+              type: "p",
+              text: "[A 3D Utah Teapot in 2D Desmos.](https://www.desmos.com/calculator/fbb954dbde) ",
+            }
+          ],
+        },
+        {
+          title: "Subwoofer Design",
+          blocks: [
+            {
+              type: "image",
+              src: "assets/images/desmos/subwoofer.png",
+              alt: "3D Utah Teapot graph",
+            },
+            {
+              type: "p",
+              text: "[Designed a subwoofer in Desmos.](https://www.desmos.com/calculator/5945c5ae9c) ",
+            }
+          ],
+        },
+        {
+          title: "Fixed Point 3D renderer",
+          blocks: [
+            {
+              type: "image",
+              src: "assets/images/desmos/FixedPointRenderer.png",
+              alt: "3D Utah Teapot graph",
+            },
+            {
+              type: "p",
+              text: "[For one of my projects I was contemplating using fixed point arithmetic but before implementing it I wanted to see how it would look](https://www.desmos.com/calculator/siyzpfxagn) ",
+            },
+            {
+              type: "p",
+              text: "[Similarly I made a graph testing 16 bit floats instead.](https://www.desmos.com/calculator/nruwysokah) ",
+            }
+          ],
+        },
+        {
+          title: "Color Bit-Depth",
+          blocks: [
+            {
+              type: "image",
+              src: "assets/images/desmos/hologramColors.png",
+              alt: "Color graph",
+            },
+            {
+              type: "p",
+              text: "[Testing how colors would look given different bit depths](https://www.desmos.com/calculator/948df8a23c) ",
             },
           ],
         },
+        {
+          title: "Triangle Rasterizer",
+          blocks: [
+            {
+              type: "image",
+              src: "assets/images/desmos/rasterizer.png",
+              alt: "Color graph",
+            },
+            {
+              type: "p",
+              text: "[Testing a triangle rasterizing algorithm](https://www.desmos.com/calculator/123724bd86) ",
+            },
+          ],
+        },
+        {
+          title: "Ice Cream",
+          blocks: [
+            {
+              type: "image",
+              src: "assets/images/desmos/iceCream.png",
+              alt: "Color graph",
+            },
+            {
+              type: "p",
+              text: "[Ice Cream](https://www.desmos.com/calculator/h6nvsgty4c) ",
+            },
+          ],
+        },
+        {
+          title: "2D Raycaster",
+          blocks: [
+            {
+              type: "image",
+              src: "assets/images/desmos/2dRayCaster.png",
+              alt: "Color graph",
+            },
+            {
+              type: "p",
+              text: "[Simple 2D Raycaster](https://www.desmos.com/calculator/230a234d96) ",
+            },
+          ],
+        },
+        {
+          title: "Fourier Transform",
+          blocks: [
+            {
+              type: "image",
+              src: "assets/images/desmos/fourier.png",
+              alt: "Color graph",
+            },
+            {
+              type: "p",
+              text: "[Simple Fourier Transform](https://www.desmos.com/calculator/aw5ukdoylh) ",
+            },
+          ],
+        },
+        {
+          title: "Inverse Kinematics",
+          blocks: [
+            {
+              type: "image",
+              src: "assets/images/desmos/ik.png",
+              alt: "Color graph",
+            },
+            {
+              type: "p",
+              text: "[Simple 2D inverse kinematics](https://www.desmos.com/calculator/8k7hc2nkzg) ",
+            },
+          ],
+        },
+        {
+          title: "Planet With Fireworks",
+          blocks: [
+            {
+              type: "image",
+              src: "assets/images/desmos/planet.png",
+              alt: "Color graph",
+            },
+            {
+              type: "p",
+              text: "[Graph of planet made for father's day](https://www.desmos.com/calculator/88383f58c1) ",
+            },
+          ],
+        },
+        {
+          title: "Ocean Scene",
+          blocks: [
+            {
+              type: "image",
+              src: "assets/images/desmos/oceanScene.png",
+              alt: "Color graph",
+            },
+            {
+              type: "p",
+              text: "[Graph made for a math class assignment. Kicked off my love for desmos](https://www.desmos.com/calculator/6c917ac4ba) ",
+            },
+          ],
+        },
+        
+        
       ],
     },
     {
-      id: "data-viz",
-      title: "Data Visualization Study",
-      date: "July 2024",
-      image: "assets/images/data-viz.svg",
+      id: "Speakers",
+      title: "Big Speakers",
+      date: "2025",
+      image: "assets/images/speakers/speakersOnDesk.JPG",
       summary: "Canvas charts exploring clarity, hierarchy, and motion.",
       sections: [
         {

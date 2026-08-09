@@ -1,13 +1,14 @@
 
 make it work on mobile
 fix spacing on service resume page
+make links that open external websites open in a new tab
 
 Projects:
 FPGA computer
-desmos
-games
 physics
 voxels
 UROP
 Jam it
 speakers
+3d printed subwoofer
+
