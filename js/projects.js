@@ -144,7 +144,7 @@ const PROJECTS = {
       id: "rigidBodyPhysics",
       title: "Rigid Body Physics Engine",
       date: "2023",
-      image: "assets/images/physics/rigidBodyPhysics.PNG",
+      image: "assets/images/physics/rigidbodyPhysics.PNG",
       summary: "2D rigid body physics engine capable of complex shapes.",
       sections: [
         {
@@ -183,7 +183,7 @@ const PROJECTS = {
       id: "voxelRenderingTechniques",
       title: "Voxel Rendering Techniques",
       date: "",
-      image: "assets/images/voxels/shaderToyVoxel.PNG",
+      image: "assets/images/voxels/shadertoyVoxel.PNG",
       summary: "A summary of my projects related to rendering voxels.",
       sections: [
         {
@@ -580,7 +580,7 @@ const PROJECTS = {
       id: "jamit",
       title: "Jam It!",
       date: "January 2026",
-      image: "assets/images/jamIt/JamItCover.png",
+      image: "assets/images/jamIt/JamItCover.PNG",
       summary: "The ultimate song guessing game designed to test your music knowledge",
       sections: [
         {
@@ -604,7 +604,7 @@ const PROJECTS = {
       id: "WaddlesAndWiggles",
       title: "Waddle's and Wiggle's Wild Dash to the Way Out",
       date: "February 2025",
-      image: "assets/images/waddlesAndWiggles/gamePlay.png",
+      image: "assets/images/waddlesAndWiggles/gamePlay.PNG",
       summary: "2D local multiplayer platformer",
       sections: [
         {
@@ -631,7 +631,7 @@ const PROJECTS = {
       id: "KingdomChaos",
       title: "Kingdom Chaos",
       date: "February 2024",
-      image: "assets/images/kingdom/gamePlay.png",
+      image: "assets/images/kingdom/gamePlay.PNG",
       summary: "A chess themed bullet hell",
       sections: [
         {
@@ -649,7 +649,7 @@ const PROJECTS = {
       id: "TheWonderousWorld",
       title: "The Wonderous World",
       date: "February 2022",
-      image: "assets/images/wonderworld/gamePlay.png",
+      image: "assets/images/wonderworld/gamePlay.PNG",
       summary: "A 2D platformer based around the Wonders of the World.",
       sections: [
         {
@@ -669,7 +669,7 @@ const PROJECTS = {
       id: "desmos",
       title: "Desmos Graphs",
       date: "",
-      image: "assets/images/desmos/mandelbrot.png",
+      image: "assets/images/desmos/mandelbrot.PNG",
       summary: "A collection of cool graphs I have made in the Desmos graphing calculator",
       sections: [
         {
@@ -686,7 +686,7 @@ const PROJECTS = {
           blocks: [
             {
               type: "image",
-              src: "assets/images/desmos/mandelbrot.png",
+              src: "assets/images/desmos/mandelbrot.PNG",
               alt: "Mandelbrot graph",
             },
             {
@@ -700,7 +700,7 @@ const PROJECTS = {
           blocks: [
             {
               type: "image",
-              src: "assets/images/desmos/mitDome.png",
+              src: "assets/images/desmos/mitDome.PNG",
               alt: "Mit Dome graph",
             },
             {
@@ -714,7 +714,7 @@ const PROJECTS = {
           blocks: [
             {
               type: "image",
-              src: "assets/images/desmos/golf.png",
+              src: "assets/images/desmos/golf.PNG",
               alt: "Golf game graph",
             },
             {
@@ -728,7 +728,7 @@ const PROJECTS = {
           blocks: [
             {
               type: "image",
-              src: "assets/images/desmos/mountains.png",
+              src: "assets/images/desmos/mountains.PNG",
               alt: "Mountain graph",
             },
             {
@@ -742,7 +742,7 @@ const PROJECTS = {
           blocks: [
             {
               type: "image",
-              src: "assets/images/desmos/utahteapot.png",
+              src: "assets/images/desmos/utahteapot.PNG",
               alt: "3D Utah Teapot graph",
             },
             {
@@ -756,7 +756,7 @@ const PROJECTS = {
           blocks: [
             {
               type: "image",
-              src: "assets/images/desmos/subwoofer.png",
+              src: "assets/images/desmos/subwoofer.PNG",
               alt: "3D Utah Teapot graph",
             },
             {
@@ -770,7 +770,7 @@ const PROJECTS = {
           blocks: [
             {
               type: "image",
-              src: "assets/images/desmos/FixedPointRenderer.png",
+              src: "assets/images/desmos/FixedPointRenderer.PNG",
               alt: "3D Utah Teapot graph",
             },
             {
@@ -788,7 +788,7 @@ const PROJECTS = {
           blocks: [
             {
               type: "image",
-              src: "assets/images/desmos/hologramColors.png",
+              src: "assets/images/desmos/hologramColors.PNG",
               alt: "Color graph",
             },
             {
@@ -802,7 +802,7 @@ const PROJECTS = {
           blocks: [
             {
               type: "image",
-              src: "assets/images/desmos/rasterizer.png",
+              src: "assets/images/desmos/rasterizer.PNG",
               alt: "Color graph",
             },
             {
@@ -816,7 +816,7 @@ const PROJECTS = {
           blocks: [
             {
               type: "image",
-              src: "assets/images/desmos/iceCream.png",
+              src: "assets/images/desmos/iceCream.PNG",
               alt: "Color graph",
             },
             {
@@ -830,7 +830,7 @@ const PROJECTS = {
           blocks: [
             {
               type: "image",
-              src: "assets/images/desmos/2dRayCaster.png",
+              src: "assets/images/desmos/2dRayCaster.PNG",
               alt: "Color graph",
             },
             {
@@ -844,7 +844,7 @@ const PROJECTS = {
           blocks: [
             {
               type: "image",
-              src: "assets/images/desmos/fourier.png",
+              src: "assets/images/desmos/fourier.PNG",
               alt: "Color graph",
             },
             {
@@ -858,7 +858,7 @@ const PROJECTS = {
           blocks: [
             {
               type: "image",
-              src: "assets/images/desmos/ik.png",
+              src: "assets/images/desmos/ik.PNG",
               alt: "Color graph",
             },
             {
@@ -872,7 +872,7 @@ const PROJECTS = {
           blocks: [
             {
               type: "image",
-              src: "assets/images/desmos/planet.png",
+              src: "assets/images/desmos/planet.PNG",
               alt: "Color graph",
             },
             {
@@ -886,7 +886,7 @@ const PROJECTS = {
           blocks: [
             {
               type: "image",
-              src: "assets/images/desmos/oceanScene.png",
+              src: "assets/images/desmos/oceanScene.PNG",
               alt: "Color graph",
             },
             {
