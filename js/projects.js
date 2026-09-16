@@ -288,41 +288,230 @@ const PROJECTS = {
     },
   ],
   circuitry: [
-    /* 
     {
-      id: "sensor-suite",
-      title: "RISC-V computer and Graphics Card",
+      id: "RISCComputer",
+      title: "RISC-V computer and 3D Graphics Card",
       date: "Summer 2026",
-      image: "assets/images/sensor-suite.svg",
+      image: "assets/images/FPGAGraphicsCard/thumbnail.JPG",
       summary: "A custom computer running on an FPGA",
+      //make sure to talk about
+      /**
+       * 
+       * 
+       * mandelbrot
+       * 
+       * tool website
+       * c mock up
+       * desmos mock up
+       * shader toy mock up
+       * 
+       * 
+       */
       sections: [
         {
           title: "Overview",
           blocks: [
             {
               type: "p",
-              text: "This suite bundles temperature, ambient light, and motion sensors into one Arduino-based logger with a shared sampling loop.",
+              text: "Essentially, as a broad overview of this project, I made a fully functioning computer that runs on a FPGA (Field Programmable Gate Array). And I did it all without AI writing any of the hardware! An FPGA is a special type of computer chip that can \"emulate\" other circuitry. In this case the FPGA is \"emulating\" the computer I designed. The computer is split into two parts. There is the CPU (Central Processing Unit), which is the brains of the computer, then the GPU (Graphics Processing Unit) which does all of the drawing and computations related to drawing.",
+            },
+          ],
+
+          subsections: [
+            {
+              title: "What can the computer do?",
+              blocks: [
+                {
+                  type: "p",
+                  text: "The CPU can pretty much run any program written in the C programming language. The one limitation is floating arithmetic since the CPU has no instructions that can do it natively. The solution is memory mapped floating point arithmetic. The CPU can write to the screen allowing the user to make programs that draw shapes or text. When it comes to drawing, the CPU is pretty slow. Instead the much faster approach is to utilize the GPU.",
+                },
+                {
+                  type: "p",
+                  text: "The GPU takes in an list of vertices and a 4x4 matrix. The matrix is used to transform the vertices in 3d space. This is useful for translating/rotating/scaling models with respect to a camera. Then the GPU draws every 3 vertices as a triangle on the screen with a corresponding color."
+                },
+                {
+                  type: "p",
+                  text: "The structure of a normal program goes as follows. 1. The cpu will load the vertices and color for the model to a certain point in memory. 2. The cpu will make a 4x4 matrix based on a given rotation/translation/scale/and projection matrix. 3. The cpu will give this matrix to the GPU along with information on where the triangles are stored. 4. The cpu sends a command to draw all of the triangles for a given model. 5. repeat steps 2-4 for each model. 6. Wait for the GPU to finish drawing then tell the GPU to flip the front and back buffers so the image can be visible."
+                },
+              ],
             },
             {
+              title: "Quick Stats",
+              blocks: [
+                
+                {
+                  type: "p",
+                  text: "The CPU is a slightly limited implementation of the RISCV-32I instruction set. It runs at around 10Mhz.",
+                },
+                {
+                  type: "p",
+                  text: "In general the GPU can draw around 300ish triangles at 60 fps on a 1280x720 resolution display at 24 bits per pixel. "
+                },
+                {
+                  type: "p",
+                  text: "Both the CPU and GPU can use 16 bit floating point arithmetic (Add/Sub, Mult, Div).",
+                },
+              ],
+            },
+            {
+              title:"Development tools overview",
+              blocks:[
+                {
+                  type: "p",
+                  text: "I used the Urbana RealDigital board (uses the AMD XC7S50-CSG324A Spartan 7 FPGA). For this project all the hardware was made using SystemVerilog. I used the Visual Studio Code IDE. Vivado was used for simulation and generation of the bit file. I used the openFPGALoader to program the FPGA. Some custom made tools that I will talk about later. I used shadertoy to test some rendering methods. Finally I also used Desmos to test a lot of math throughout this project.",
+                }
+              ]
+            }
+          ],
+        },
+        {
+          title: "System Architecture",
+          blocks:[,
+            {
               type: "image",
-              src: "assets/images/sensor-suite.svg",
-              alt: "Sensor suite board",
+              src: "assets/images/FPGAGraphicsCard/generalArchitecture.PNG",
+              alt: "Rough diagram of the system",
+              aspectRatio: "1920:1080"
             },
           ],
           subsections: [
             {
-              title: "Logging",
+              title: "System Architecture Overview",
               blocks: [
                 {
                   type: "p",
-                  text: "Readings are timestamped and written to serial for later graphing. Calibration helpers keep raw values closer to real-world units.",
+                  text: "While the exciting parts of the system are the CPU and GPU, there is a lot of supporting architecture that allows the computer to work. For example, every component in the computer ends up touching the RAM Controller. Overall the whole system can be broken down into the following: CPU, GPU, RAM Controller, MMIO Controller (Memory Mapped I/O), HDMI Controller, and the CPU Floating point hardware.",
+                },
+                {
+                  type: "p",
+                  text: "CPU: Does all of the computation and runs the program",
+                },
+                {
+                  type: "p",
+                  text: "GPU: Draws the triangles",
+                },
+                {
+                  type: "p",
+                  text: "RAM Controller: Manages the read/write requests to RAM.",
+                },
+                {
+                  type: "p",
+                  text: "MMIO Controller: The Memory Mapped I/O Controller intercepts some request to RAM and instead reads or writes to a register used by other components.",
+                },
+                {
+                  type: "p",
+                  text: "HDMI Controller: Manages transferring the frame buffer from RAM to output it through HDMI.",
+                },
+                {
+                  type: "p",
+                  text: "CPU Floating Point Hardware: Takes inputs through the MMIO registers and outputs the calculated result through other MMIO registers.",
                 },
               ],
             },
-          ],
+            {
+              title: "System Memory Map",
+              blocks:[
+                {
+                  type: "p",
+                  text: "0x0000_0000-0x007F_FFFF - Screen Buffer 1"
+                },
+                {
+                  type: "p",
+                  text: "0x0080_0000-0x00FF_FFFF - Screen Buffer 2"
+                },
+                {
+                  type: "p",
+                  text: "0x0100_0000-0x017F_FFFF - Triangle Vertex Buffer"
+                },
+                {
+                  type: "p",
+                  text: "0x0180_0000-0x0180_00FF - MMIO (NOT byte addressable only word addressable)"
+                },
+                {
+                  type: "p",
+                  text: "0x0200_0000-end - CPU Program"
+                }
+              ],
+            },
+            {
+              title: "CPU",
+              blocks:[
+                {
+                  type: "p",
+                  text: "The CPU is a slightly limited implementation of the RISCV-32I instruction set. The CPU uses all of the RISCV-32 instructions except the ones related to operating systems. Since I knew the end goal was not to have an operating system but run a game, I decided not to implement these functions. The CPU has full access to RAM except in the MMIO range. In this range the MMIO controller intercepts the reads and writes and instead reads from or writes to registers which are used for various purposes. One example of the uses of MMIO registers is on board LEDs and Switches. By writing/reading to a certain spot in RAM, the CPU can control them."
+                },
+                {
+                  type: "p",
+                  text: "The CPU is made up of a few different parts. The Register stack holds the 31 register used for calculations. The ALU does all of the math. The Instruction Decoder interprets and conducts the CPU. The CPU program loader is only used on start up to transfer the CPU's program from the FPGA's internal BRAM to the boards physical much larger RAM. Finally the CPU RAM Controller controls the flow of data in and out of the CPU. While the every component in the CPU runs at 10MHz, the CPU RAM Controller runs at 100MHz. The reason for the different speeds is because the rest of the components on the CPU needed more time to settle due to more complicated logic. The CPU RAM Controller, on the other hand, was much simpler and could run at a higher speed. The slow clock speed does not impact the performance of the CPU much because the CPU spends most of its time waiting for RAM to respond. This computer is mostly limited by RAM because so many components want to talk to it. "
+                }
+              ],
+            },
+            {
+              title: "GPU",
+              blocks:[
+                {
+                  type: "p",
+                  text: "While the GPU's primary function is to draw triangles it can do a bit more than that. Specifically it can 0. Switch the front and back buffer then clear the new back buffer, 1. draw triangles, 2. clear back buffer, 3. switch buffers. The GPU is mostly made up of three components, the Vertex Transformer, Triangle Drawer and the GPU RAM Controller.",
+                },
+                {
+                  type: "p",
+                  text: "The RAM Controller simply controls the flow of data in and out of the GPU and also is responsible for clearing the back buffer."
+                },
+                {
+                  type: "p",
+                  text: "The Vertex Transformer takes each vertex the multiplies it against the input 4x4 matrix (provided by the CPU). Then the resulting vector is divided by its w component to give the vertex perspective. At this point, similar to openGL, the vertex should be in a box ranging from -1 to 1. The vertex is transformed from that box from -1 to 1 to screen space 0 - 1280 in the x and 0 - 720 in the y z goes from 0 - 256. When doing this the 16 bit floating point vertex is converted to 16 bit fixed point (12 bits.4 bits). This allows for much simpler logic in the triangle drawer. The final transformed vertex is then passed off to the triangle draw along with its color."
+                },
+                {
+                  type: "p",
+                  text: "The Triangle Drawer takes each vertices from triangle drawer. For every there vertices it gets it will draw a triangle of the given color. The triangle drawer only draws triangles of a counter clock wise winding order (industry standard). Each pixel of the triangle is only drawn if its depth is closer than the one in the depth buffer. The depth of each triangle is calculated on a whole triangle basis by an algorithm that approximates the average of the 3 z coordinates of the triangle. I attempted to make the depth interpolate across the triangle. It worked in simulation; however it was too large to fit on my FPGA so I had to remove it.  "
+                },
+                {
+                  type: "p",
+                  text: "The GPU is controlled by the CPU through MMIO registers. The CPU first starts by writing to Graphics Card Draw State Register to indicate what the GPU should do (0-switch buffers and clear back, 1-draw triangles, 2-clear back buffer, 3-switch buffers). Now if the state is 0, 2, or 3 the GPU does not need any more info and the CPU can signal the GPU to start by writing a 1 to the GPU Start register. If the state is 1 the CPU is telling the GPU to draw triangles so it has to indicate the starting index, ending index, and the 4x4 matrix. From here the CPU can tell the GPU to start. The GPU also outputs to one of the registers if it is ready more for commands so the CPU knows when it can send commands to the GPU."
+                }
+              ],
+            },
+            {
+              title: "RAM Controller",
+              blocks:[
+                {
+                  type: "p",
+                  text: "The CPU is a slightly limited implementation of the RISCV-32I instruction set. The instructions my CPU is missing are the ones related to operating systems. Since I knew the end goal was not to have an operating system but run a game, I decided not to implement these functions; However, since I knew I was going to be working with 3D graphics and I knew I needed my CPU to do floating point math. I added memory mapped floating point operations (Add/Sub, Mult, Div, and Float to Int converter).",
+                }
+              ],
+            },
+            {
+              title: "HDMI Controller",
+              blocks:[
+                {
+                  type: "p",
+                  text: "The CPU is a slightly limited implementation of the RISCV-32I instruction set. The instructions my CPU is missing are the ones related to operating systems. Since I knew the end goal was not to have an operating system but run a game, I decided not to implement these functions; However, since I knew I was going to be working with 3D graphics and I knew I needed my CPU to do floating point math. I added memory mapped floating point operations (Add/Sub, Mult, Div, and Float to Int converter).",
+                }
+              ],
+            },
+            {
+              title: "MMIO Controller",
+              blocks:[
+                {
+                  type: "p",
+                  text: "The CPU is a slightly limited implementation of the RISCV-32I instruction set. The instructions my CPU is missing are the ones related to operating systems. Since I knew the end goal was not to have an operating system but run a game, I decided not to implement these functions; However, since I knew I was going to be working with 3D graphics and I knew I needed my CPU to do floating point math. I added memory mapped floating point operations (Add/Sub, Mult, Div, and Float to Int converter).",
+                }
+              ],
+            }
+          ]
         },
+        
+        {
+          title: "Development timeline",
+          blocks:[
+            {
+              type: "p",
+              text: "The CPU is a slightly limited implementation of the RISCV-32I instruction set. The instructions my CPU is missing are the ones related to operating systems. Since I knew the end goal was not to have an operating system but run a game, I decided not to implement these functions; However, since I knew I was going to be working with 3D graphics and I knew I needed my CPU to do floating point math. I added memory mapped floating point operations (Add/Sub, Mult, Div, and Float to Int converter).",
+            }
+          ],
+        }
       ],
-    },*/
+    },
     {
       id: "6502 Game Console",
       title: "6502 Game Console",
