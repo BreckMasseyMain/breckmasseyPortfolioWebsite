@@ -334,7 +334,7 @@ const PROJECTS = {
                   text: "The structure of a normal program goes as follows. 1. The cpu will load the vertices and color for the model to a certain point in memory. 2. The cpu will make a 4x4 matrix based on a given rotation/translation/scale/and projection matrix. 3. The cpu will give this matrix to the GPU along with information on where the triangles are stored. 4. The cpu sends a command to draw all of the triangles for a given model. 5. repeat steps 2-4 for each model. 6. Wait for the GPU to finish drawing then tell the GPU to flip the front and back buffers so the image can be visible."
                 },
               ],
-            },
+            },   
             {
               title: "Quick Stats",
               blocks: [
@@ -363,15 +363,41 @@ const PROJECTS = {
               ]
             }
           ],
+        }, 
+        {
+          title: "Development timeline",
+          blocks:[
+            {
+              type: "p",
+              text: "I built this whole project over the summer of 2026. I started around June 1st and finished right around September 1st. My work on it was a bit sporadic depending on what I had going on, but surprisingly some of my most productive weeks were when I was on vacation! ",
+            }
+          ],
+          subsections: [
+            {
+              title:"CPU Development",
+              blocks:[
+                {
+                  type: "p",
+                  text: "To start the summer I made the CPU. This was relatively straightforward.",
+                }
+              ]
+            }
+            //cpu development 
+            //implementing the ram
+            //hooking up cpu to ram
+              //mandelbrot
+            //gpu development
+            //programming
+          ],
         },
         {
           title: "System Architecture",
-          blocks:[,
+          blocks:[
             {
               type: "image",
               src: "assets/images/FPGAGraphicsCard/generalArchitecture.PNG",
               alt: "Rough diagram of the system",
-              aspectRatio: "1920:1080"
+              aspectRatio: "1920 / 1080"
             },
           ],
           subsections: [
@@ -466,6 +492,13 @@ const PROJECTS = {
                   text: "The Triangle Drawer takes each vertices from triangle drawer. For every there vertices it gets it will draw a triangle of the given color. The triangle drawer only draws triangles of a counter clock wise winding order (industry standard). Each pixel of the triangle is only drawn if its depth is closer than the one in the depth buffer. The depth of each triangle is calculated on a whole triangle basis by an algorithm that approximates the average of the 3 z coordinates of the triangle. I attempted to make the depth interpolate across the triangle. It worked in simulation; however it was too large to fit on my FPGA so I had to remove it.  "
                 },
                 {
+                  type: "image",
+                  src: "assets/images/FPGAGraphicsCard/simDepthBuffer.PNG",
+                  alt: "Sim Depth Buffer",
+                  aspectRatio: "1 / 1",
+                  caption: "Depth Buffer output from Simulation (per triangle)"
+                },
+                {
                   type: "p",
                   text: "The GPU is controlled by the CPU through MMIO registers. The CPU first starts by writing to Graphics Card Draw State Register to indicate what the GPU should do (0-switch buffers and clear back, 1-draw triangles, 2-clear back buffer, 3-switch buffers). Now if the state is 0, 2, or 3 the GPU does not need any more info and the CPU can signal the GPU to start by writing a 1 to the GPU Start register. If the state is 1 the CPU is telling the GPU to draw triangles so it has to indicate the starting index, ending index, and the 4x4 matrix. From here the CPU can tell the GPU to start. The GPU also outputs to one of the registers if it is ready more for commands so the CPU knows when it can send commands to the GPU."
                 }
@@ -476,7 +509,7 @@ const PROJECTS = {
               blocks:[
                 {
                   type: "p",
-                  text: "The CPU is a slightly limited implementation of the RISCV-32I instruction set. The instructions my CPU is missing are the ones related to operating systems. Since I knew the end goal was not to have an operating system but run a game, I decided not to implement these functions; However, since I knew I was going to be working with 3D graphics and I knew I needed my CPU to do floating point math. I added memory mapped floating point operations (Add/Sub, Mult, Div, and Float to Int converter).",
+                  text: "I felt like a plumber making the RAM Controller since it takes all of these \"pipes\" of data from all of the computer sends them off to the RAM then there is another \"pipe\" coming back from the RAM which has to be split off and sent back to the right components. The RAM Controller essentially controls the data flow into and out of the UberDDR3 RAM Controller. The UberDDR3 RAM Controller was made by Angelo Jacobo to control the DDRM chip and make interfacing with it easy.",
                 }
               ],
             },
@@ -485,7 +518,7 @@ const PROJECTS = {
               blocks:[
                 {
                   type: "p",
-                  text: "The CPU is a slightly limited implementation of the RISCV-32I instruction set. The instructions my CPU is missing are the ones related to operating systems. Since I knew the end goal was not to have an operating system but run a game, I decided not to implement these functions; However, since I knew I was going to be working with 3D graphics and I knew I needed my CPU to do floating point math. I added memory mapped floating point operations (Add/Sub, Mult, Div, and Float to Int converter).",
+                  text: "The HDMI Controller is pretty simple, all it does is read data from the front buffer and outputs it to the screen using HDMI.",
                 }
               ],
             },
@@ -494,21 +527,23 @@ const PROJECTS = {
               blocks:[
                 {
                   type: "p",
-                  text: "The CPU is a slightly limited implementation of the RISCV-32I instruction set. The instructions my CPU is missing are the ones related to operating systems. Since I knew the end goal was not to have an operating system but run a game, I decided not to implement these functions; However, since I knew I was going to be working with 3D graphics and I knew I needed my CPU to do floating point math. I added memory mapped floating point operations (Add/Sub, Mult, Div, and Float to Int converter).",
-                }
+                  text: "The Memory Mapped I/O Controller gives the CPU access to MMIO. MMIO is used by the CPU to communicate with the GPU, 16 bit floating point hardware and external hardware. Bellow you can see all of the MMIO registers."
+                },
+                {
+                  type: "image",
+                  src: "assets/images/FPGAGraphicsCard/MMIO1.PNG",
+                  alt: "MMIO table 1",
+                  aspectRatio: "764 / 865", 
+                },
+                {
+                  type: "image",
+                  src: "assets/images/FPGAGraphicsCard/MMIO2.PNG",
+                  alt: "MMIO table 2",
+                  aspectRatio: "775 / 560", 
+                },
               ],
             }
           ]
-        },
-        
-        {
-          title: "Development timeline",
-          blocks:[
-            {
-              type: "p",
-              text: "The CPU is a slightly limited implementation of the RISCV-32I instruction set. The instructions my CPU is missing are the ones related to operating systems. Since I knew the end goal was not to have an operating system but run a game, I decided not to implement these functions; However, since I knew I was going to be working with 3D graphics and I knew I needed my CPU to do floating point math. I added memory mapped floating point operations (Add/Sub, Mult, Div, and Float to Int converter).",
-            }
-          ],
         }
       ],
     },
