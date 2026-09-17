@@ -1,3 +1,8 @@
+//Local host instruction
+//http://localhost:8000
+//py -m http.server 8000
+
+
 /**
  * Project format
  * --------------
@@ -305,7 +310,13 @@ const PROJECTS = {
        * desmos mock up
        * shader toy mock up
        * 
-       * 
+       * skills learned section
+       *  system verilog and making testbenches
+       *  c and make/gcc
+       *  vivado tools
+       *  learned about cpu and gpu design
+       *  learned about the floating point system and how to design hardware for it
+       *  
        */
       sections: [
         {
@@ -321,6 +332,11 @@ const PROJECTS = {
             {
               title: "What can the computer do?",
               blocks: [
+                {
+                  type: "video",
+                  src: "https://youtu.be/YBSbNq8QTDo",
+                  caption: "Demo of computer rendering a 3D scene of a Ball, the Blender Monkey, and the Utah Teapot "
+                }, 
                 {
                   type: "p",
                   text: "The CPU can pretty much run any program written in the C programming language. The one limitation is floating arithmetic since the CPU has no instructions that can do it natively. The solution is memory mapped floating point arithmetic. The CPU can write to the screen allowing the user to make programs that draw shapes or text. When it comes to drawing, the CPU is pretty slow. Instead the much faster approach is to utilize the GPU.",
@@ -378,14 +394,163 @@ const PROJECTS = {
               blocks:[
                 {
                   type: "p",
-                  text: "To start the summer I made the CPU. This was relatively straightforward.",
+                  text: "To start the summer I made the CPU. To start the CPU ran fully off of BRAM not the actual RAM chip. Through out the process of build the CPU I would write little test programs to test the functionality. This was before I learned about using Makefiles and GCC to compile C code for me. I am very grateful that I learned that skill because I've already spent enough of my life writing assembly (see my 6502 project)",
+                },
+                {
+                  type: "video",
+                  src: "https://youtube.com/shorts/TRToxRDlRAU",
+                  caption: "Video demonstrating early RISC-V CPU running simple program"
+                }
+              ]
+            },
+            {
+              title:"Implementing RAM",
+              blocks:[
+                {
+                  type: "p",
+                  text: "After making the CPU I decided to tackle writing up the RAM Controller. I knew all of the systems would eventually need to be hooked up to a real RAM so I decided to make that next. This was by far the hardest part for me. I was using the UberDDR3 RAM Controller was made by Angelo Jacobo to communicate with the actual DRAM chips. Getting this running in simulation was such a pain. Not because of me but because of some weird issues on Vivado's side. Vivado was seemingly ignoring the Define statements which were used to se up the type of RAM chip UberDDR3 would communicate with. After getting UberDDR3 working in simulation I started working on making the actual RAM controller. This took me a while, since I was also developing the HDMI Controller at the same time so I could visually check if the RAM was working. Between the two I kept running into weird off by one errors that would completely destroy the image. Basically all of my errors came down to improperly using FIFOs. Once I figured out how to properly use FIFOs all of my issues disappeared. You would think I learned my lesson but throughout the rest of the project I would try to take shortcuts when setting up FIFOs and it would always come back to bite me. I think the biggest lesson I have learned through this project is how to use FIFOs properly.",
+                },
+                {
+                  type: "video",
+                  src: "https://youtu.be/8qhd6F3SbVg",
+                  caption: "Video showing the glitchy RAM outputs then the file stable RAM output."
+                }
+              ]
+            },
+            {
+              title:"Hooking up the CPU to RAM and the Mandelbrot Fractal",
+              blocks:[
+                {
+                  type: "p",
+                  text: "The next big step was to convert my CPU from using the FPGA's BRAM to using the actual RAM. This was a challenge because my CPU was originally designed expecting the RAM to respond immediately to request. Now I had to change the structure slightly to support waiting for RAM request to finish. After hooking up the CPU to RAM I then added Memory Mapped I/O (MMIO). I used this for accessing external components such as LEDs. I also used it for communication between the CPU and GPU. And finally it gave my CPU which can only do integer operations access to external hardware which could do 16 bit floating point operations. After this I made the Mandelbrot Fractal as a demo. It took the computer about 3 minutes to compute the 1280x720 pixel display using 20 iterations per pixel. This is about 73 million floating point multiplications and 92 million floating point additions!"
+                },
+                {
+                  type: "image",
+                  src: "assets/images/FPGAGraphicsCard/mandel1.JPG",
+                  caption: "Image showing output from Mandelbrot Fractal program."
+                },
+                {
+                  type: "video",
+                  src: "https://youtube.com/shorts/aE-O2uNWqME",
+                  caption: "Time lapse of Mandelbrot Fractal being drawn by CPU."
+                }
+              ]
+            },
+            {
+              title:"First Triangle",
+              blocks:[
+                {
+                  type: "p",
+                  text: "The next step was to start on the graphics card. I opted to start by making the triangle drawer because I could immediately see results. I essentially followed the method layed out in the paper \"A Parallel Algorithm for Polygon Rasterization\" by Juan Pineda to implement the rasterization. Bellow is an image of the first triangle successful triangle rendered by the triangle drawer. As you can see the triangle is stripped, but the triangle drawer can only actually draw one color for a triangle. This is because every time the triangle drawer finished drawing a triangle it was assigned a new color. What we are seeing is the triangle drawer drawing multiple triangles as the HDMI \"beam\" passes by."
+                },
+                {
+                  type: "image",
+                  src: "assets/images/FPGAGraphicsCard/Triangle1.JPG",
+                  caption: "Image showing first triangle drawn by the triangle drawer."
+                }
+              ]
+            },
+            {
+              title:"Start to GPU",
+              blocks:[
+                {
+                  type: "p",
+                  text: "In the current form the triangle drawer was only drawing the same hardwired triangle. So the next logical step was for the CPU to tell the GPU which triangles to draw. To do this I started setting up the GPU. For now I took vertices, which were fixed point screen space coordinates, and just transferred them to the triangle drawer. Before I had the triangle drawer directly connected to the RAM Controller but now it had to go through the GPU RAM Controller which manages all of the memory access for the GPU components. Even though the triangle drawer was not touched, this transition caused some new problems and exposed other problems about the triangle drawer. Most of the new issues were a result of poor FIFO usage when sending data to the RAM."
+                },
+                {
+                  type: "video",
+                  src: "https://youtu.be/6bPHYiQqM9M",
+                  caption: "Initial buggy triangle drawing."
+                }
+              ]
+            },
+            {
+              title:"Start to GPU",
+              blocks:[
+                {
+                  type: "p",
+                  text: "In the current form the triangle drawer was only drawing the same hardwired triangle. So the next logical step was for the CPU to tell the GPU which triangles to draw. To do this I started setting up the GPU. For now I took vertices, which were fixed point screen space coordinates, and just transferred them to the triangle drawer. Before I had the triangle drawer directly connected to the RAM Controller but now it had to go through the GPU RAM Controller which manages all of the memory access for the GPU components. Even though the triangle drawer was not touched, this transition caused some new problems and exposed other problems about the triangle drawer. Most of the new issues were a result of poor FIFO usage when sending data to the RAM."
+                },
+                {
+                  type: "video",
+                  src: "https://youtu.be/6bPHYiQqM9M",
+                  caption: "Initial buggy triangle drawing."
+                },
+                {
+                  type: "video",
+                  src: "https://youtu.be/bK4tjq2lQGE",
+                  caption: "Video showing some of the triangle bugs fixed"
+                }
+              ]
+            },
+            {
+              title:"Vertex Transformer (Final Part of GPU)",
+              blocks:[
+                {
+                  type: "p",
+                  text: "Now that I could draw triangles, I had to implement the Vertex Transformer. The Vertex Transformer takes an input vertex and transforms it to a position on the screen using a 4x4 matrix. It then feeds the screen space coordinates to the Triangle Drawer to have them drawn onto the screen as triangles. Testing the Vertex Transformer exposed a lot of minute issues in the floating point hardware I designed. I had to revisit many of my simulations and correct these small mistakes. Eventually I was able to make it work and render triangles on screen in a similar method to other graphics cards."
+                },
+                {
+                  type: "video",
+                  src: "https://youtu.be/k9ztGii0XwQ",
+                  caption: "Video showing a 3D quad rotating around on screen."
+                },
+                {
+                  type: "video",
+                  src: "https://youtu.be/KJYyj4gdRCQ",
+                  caption: "Video showing progress on a drawing a cube"
+                },
+                {
+                  type: "video",
+                  src: "https://youtube.com/shorts/vkB4mIILwLs",
+                  caption: "Video showing a 3d rotating cube being drawn by the graphics card"
+                },
+                {
+                  type: "video",
+                  src: "https://youtu.be/JFy78LCcJ14",
+                  caption: "Video showing a 3d rotating low resolution Utah Teapot being drawn by the graphics card"
+                },
+                {
+                  type: "video",
+                  src: "https://youtu.be/UvBAtRNgecE",
+                  caption: "Video showing a glitchy 3d rotating blender monkey being drawn by the graphics card. It reminds me oif the glitch effect from Spiderman into the Spiderverse."
+                },
+                {
+                  type: "video",
+                  src: "https://youtu.be/5lsJ-nbQT3c",
+                  caption: "Video showing a less glitchy 3d rotating blender monkey being drawn by the graphics card."
+                }
+              ]
+            },
+            {
+              title:"Depth Buffer",
+              blocks:[
+                {
+                  type: "p",
+                  text: "In the video above, you may have noticed when the monkey turned around, it's eyebrows were poking through the back of it's head. The reason being there was no depth buffer. The model was drawn in a specific order not based on depth meaning a further away triangle could be incorrectly drawn after a closer triangle. To fix that the depth buffer only allows closer triangles to be drawn. Due to size limitations I could not smoothly interpolate the depth across the triangle. Instead the triangle uses one depth which is an approximation of the 3 vertices. "
+                },
+                {
+                  type: "video",
+                  src: "https://youtu.be/xs2p3Ozwmxo",
+                  caption: "Video showing the same blender monkey but with the depth buffer."
+                },
+                {
+                  type: "p",
+                  text: "After implementing the depth buffer the graphics card was essentially done. I then experimented with drawing multiple models and coloring them."
+                },
+                {
+                  type: "video",
+                  src: "https://youtube.com/shorts/UyBkrNyU9bU",
+                  caption: "Video showing multiple objects. You may notice that the teapot seems to be showing internal triangles. This is because at that time the triangles were basing their depth on an arbitrary vertex rather than averaging the vertices. This would causes issues like this."
+                },
+                {
+                  type: "video",
+                  src: "https://youtu.be/YBSbNq8QTDo",
+                  caption: "Final rendering Demo."
                 }
               ]
             }
-            //cpu development 
-            //implementing the ram
-            //hooking up cpu to ram
-              //mandelbrot
+
             //gpu development
             //programming
           ],
@@ -509,7 +674,7 @@ const PROJECTS = {
               blocks:[
                 {
                   type: "p",
-                  text: "I felt like a plumber making the RAM Controller since it takes all of these \"pipes\" of data from all of the computer sends them off to the RAM then there is another \"pipe\" coming back from the RAM which has to be split off and sent back to the right components. The RAM Controller essentially controls the data flow into and out of the UberDDR3 RAM Controller. The UberDDR3 RAM Controller was made by Angelo Jacobo to control the DDRM chip and make interfacing with it easy.",
+                  text: "I felt like a plumber making the RAM Controller since it takes all of these \"pipes\" of data from all of the computer sends them off to the RAM then there is another \"pipe\" coming back from the RAM which has to be split off and sent back to the right components. The RAM Controller essentially controls the data flow into and out of the UberDDR3 RAM Controller. The UberDDR3 RAM Controller was made by Angelo Jacobo to control the DRAM chip and make interfacing with it easy.",
                 }
               ],
             },
