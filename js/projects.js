@@ -461,20 +461,6 @@ const PROJECTS = {
                   type: "video",
                   src: "https://youtu.be/6bPHYiQqM9M",
                   caption: "Initial buggy triangle drawing."
-                }
-              ]
-            },
-            {
-              title:"Start to GPU",
-              blocks:[
-                {
-                  type: "p",
-                  text: "In the current form the triangle drawer was only drawing the same hardwired triangle. So the next logical step was for the CPU to tell the GPU which triangles to draw. To do this I started setting up the GPU. For now I took vertices, which were fixed point screen space coordinates, and just transferred them to the triangle drawer. Before I had the triangle drawer directly connected to the RAM Controller but now it had to go through the GPU RAM Controller which manages all of the memory access for the GPU components. Even though the triangle drawer was not touched, this transition caused some new problems and exposed other problems about the triangle drawer. Most of the new issues were a result of poor FIFO usage when sending data to the RAM."
-                },
-                {
-                  type: "video",
-                  src: "https://youtu.be/6bPHYiQqM9M",
-                  caption: "Initial buggy triangle drawing."
                 },
                 {
                   type: "video",
