@@ -303,20 +303,6 @@ const PROJECTS = {
       /**
        * 
        * 
-       * mandelbrot
-       * 
-       * tool website
-       * c mock up
-       * desmos mock up
-       * shader toy mock up
-       * 
-       * skills learned section
-       *  system verilog and making testbenches
-       *  c and make/gcc
-       *  vivado tools
-       *  learned about cpu and gpu design
-       *  learned about the floating point system and how to design hardware for it
-       *  
        */
       sections: [
         {
@@ -324,7 +310,7 @@ const PROJECTS = {
           blocks: [
             {
               type: "p",
-              text: "Essentially, as a broad overview of this project, I made a fully functioning computer that runs on a FPGA (Field Programmable Gate Array). And I did it all without AI writing any of the hardware! An FPGA is a special type of computer chip that can \"emulate\" other circuitry. In this case the FPGA is \"emulating\" the computer I designed. The computer is split into two parts. There is the CPU (Central Processing Unit), which is the brains of the computer, then the GPU (Graphics Processing Unit) which does all of the drawing and computations related to drawing.",
+              text: "Essentially, I made a fully functioning computer that runs on a FPGA (Field Programmable Gate Array), and I did it all without AI writing any of the hardware! An FPGA is a special type of computer chip that can \"emulate\" other circuitry. In this case the FPGA is \"emulating\" the computer I designed. The computer is mainly split into two parts. There is the CPU (Central Processing Unit), which is the brains of the computer, then the GPU (Graphics Processing Unit) which does all of the drawing and computations related to drawing.",
             },
           ],
 
@@ -339,11 +325,11 @@ const PROJECTS = {
                 }, 
                 {
                   type: "p",
-                  text: "The CPU can pretty much run any program written in the C programming language. The one limitation is floating arithmetic since the CPU has no instructions that can do it natively. The solution is memory mapped floating point arithmetic. The CPU can write to the screen allowing the user to make programs that draw shapes or text. When it comes to drawing, the CPU is pretty slow. Instead the much faster approach is to utilize the GPU.",
+                  text: "The CPU can pretty much run any program written in the C programming language. It should even be able to run DOOM but I haven't tested it yet. Through some clever modifications the CPU can even do 16 bit floating point operations. The CPU can write to the screen allowing the user to make programs that draw shapes or text; However, when it comes to drawing, the CPU is pretty slow. Instead the much faster approach is to utilize the GPU. Specialized designed hardware to draw triangles and quickly do computations need for 3D graphics.",
                 },
                 {
                   type: "p",
-                  text: "The GPU takes in an list of vertices and a 4x4 matrix. The matrix is used to transform the vertices in 3d space. This is useful for translating/rotating/scaling models with respect to a camera. Then the GPU draws every 3 vertices as a triangle on the screen with a corresponding color."
+                  text: "The GPU takes in an list of vertices and a 4x4 matrix. The matrix is used to transform the vertices in 3d space. This is useful for translating/rotating/scaling models with respect to a camera. Then the GPU draws every 3 vertices as a triangle on the screen with a corresponding color (only one color per triangle)."
                 },
                 {
                   type: "p",
@@ -361,11 +347,11 @@ const PROJECTS = {
                 },
                 {
                   type: "p",
-                  text: "In general the GPU can draw around 300ish triangles at 60 fps on a 1280x720 resolution display at 24 bits per pixel. "
+                  text: "In general the GPU can draw around 300ish triangles at 60 fps on a 1280x720 resolution display at 24 bits per pixel with an 8 bit depth buffer. "
                 },
                 {
                   type: "p",
-                  text: "Both the CPU and GPU can use 16 bit floating point arithmetic (Add/Sub, Mult, Div).",
+                  text: "Both the CPU and GPU can use 16 bit floating point arithmetic (Add/Sub, Mult, Div). When running the Mandelbrot program I estimate the computer was computing about 900,000 floating point operations per second. While the GPU computes around 1,750,000 floating point operations per second when rendering around 300 triangles at 60fps.",
                 },
               ],
             },
@@ -374,7 +360,16 @@ const PROJECTS = {
               blocks:[
                 {
                   type: "p",
-                  text: "I used the Urbana RealDigital board (uses the AMD XC7S50-CSG324A Spartan 7 FPGA). For this project all the hardware was made using SystemVerilog. I used the Visual Studio Code IDE. Vivado was used for simulation and generation of the bit file. I used the openFPGALoader to program the FPGA. Some custom made tools that I will talk about later. I used shadertoy to test some rendering methods. Finally I also used Desmos to test a lot of math throughout this project.",
+                  text: "I used the Urbana RealDigital board (uses the AMD XC7S50-CSG324A Spartan 7 FPGA). For this project all the hardware was made using SystemVerilog. I used the Visual Studio Code IDE. Vivado was used for simulation and generation of the bit file. I used the openFPGALoader to program the FPGA. I will discuss more of my tools bellow.",
+                }
+              ]
+            },
+            {
+              title:"Skills Learned",
+              blocks:[
+                {
+                  type: "p",
+                  text: "This project has taught me many useful skills. The biggest skill I learned was hardware design using SystemVerilog and the vivado tool chain. I also learned more about programming in C and using makescripts. I also learned more about CPU and GPU design through building both. I also learned about different number systems such as ints, floats, and fixed point through both software and designing floating point hardware (add/sub,mult,div,floor,float to int)."
                 }
               ]
             }
@@ -693,7 +688,97 @@ const PROJECTS = {
                   aspectRatio: "775 / 560", 
                 },
               ],
+            },
+            {
+              title: "Number systems",
+              blocks:[
+                {
+                  type: "p",
+                  text: "For this project I made two number systems for my computer to use. The first was a 16 bit fixed point system. The 12 most significant bits were in front of the decimal then the 4 least significant bits went after the decimal place. For example PI would be approximated as 3.125 = 0000_0000_0011.0010. Fixed point arithmetic can be done using integer arithmetic. This made adds/subtracts very easy. Fixed point multiplications and divides were similarly done with integer mult/div but with some bit shifting."
+                },
+                {
+                  type: "p",
+                  text: "While I did initially plan for the GPU to use fixed pont for the rendering, a C simulation made me realize it's limitations. Due to the low precision vertices almost looked snappy. I decided to do a test using 16 bit floating point and it was smoother. The advantages pushed me to using them for the GPU calculations then switch to fixed point for the triangle drawing since a lower level of precision was needed. While my computer uses 16 bit floating point, it is not to the IEEE standard. After some experimentation I landed on using the following bit convention (which happens to be the same as IEEE):"
+                },
+                {
+                  type: "image",
+                  src: "assets/images/FPGAGraphicsCard/IEEE_754r_Half_Floating_Point_Format.svg.webp",
+                  caption: "Credit to wikipedia"
+                },
+                {
+                  type: "p",
+                  text: "Where my implementation differed from the IEEE standard was my 16 bit floats had no subnormals. This was to simplify the hardware so it would run faster and use less of the FPGA's resources. I also was not planning on using very small numbers for any reason. "
+                },
+                {
+                  type: "p",
+                  text: "In my system all vertices were stored as 16 bit floats. The vertex transformer would transform each vertex then convert them to fixed point. The triangle drawer then used these fixed point values to draw the triangles. The CPU had memory mapped floating point hardware that it could use to do floating point math. No fixed point hardware was provided for the CPU since fixed point math is very similar to integer math. However hardware to convert floats to fixed point was provided. "
+                }
+              ],
             }
+          ]
+        },
+        {
+          title: "Tools Used/Made",
+          blocks:[
+          ],
+          subsections: [
+            {
+              title: "Desmos Fixed Point Mock Up",
+              blocks: [
+                {
+                  type: "p",
+                  text: "Before starting on the computer I was trying to decide if I should use fixed point or floating point. To start I made a desmos graph where I made a fixed point mock up. I used it to figure out the minimum number of bits I could get away with for reasonable results. I also a mock up 3d models to visualize the precision of the fixed point number system. [link to graph](https://www.desmos.com/calculator/siyzpfxagn)"
+                },
+                {
+                  type: "image",
+                  src: "assets/images/FPGAGraphicsCard/desmosFixedPoint.PNG",
+                  aspectRatio:"1 / 1",
+                  caption: "Image of Desmos graph showing the Utah Teapot \"rendered\" using the 16 bit fixed point math (yellow) and the ground truth (grey). You can see how limited precision in fixed point leads to it drifting from the real positions."
+                },
+              ],
+            },
+            {
+              title: "C Graphics Card Mock Up",
+              blocks: [
+                {
+                  type: "p",
+                  text: "After making the desmos fixed point graph I decided to make a simulation in C. This simulation had 2 purposes. The first was to get a better visualization of the results of fixed point math. Then test the triangle drawing algorithm using software to get an understand of how it works. The C simulation also allowed me to easily plan/test out the mathematics of the vertex transformer. After making the C simulation I realized the fixed point math works but doesn't look very pleasant. As the cube rotates the vertices of the cube would jitter around. This made me decide to test out floating point arithmetic. ",
+                },
+                {
+                  type: "image",
+                  src: "assets/images/FPGAGraphicsCard/cSimOfGraphicsCard.PNG",
+                  caption: "Output from C simulation showing a rotated cube."
+                }
+              ],
+            },
+            {
+              title: "Desmos Floating Point Mock Up",
+              blocks: [
+                {
+                  type: "p",
+                  text: "I updated my fixed point graph to use floating point math. Again I could adjust the number of bits in my floating point number and the form it would take. This allowed me to figure out the best floating point set up for my project. [Link to graph](https://www.desmos.com/calculator/nruwysokah)",
+                },
+                {
+                  type: "image",
+                  src: "assets/images/FPGAGraphicsCard/desmosFloatingPoint.PNG",
+                  aspectRatio:"2 / 1",
+                  caption: "Image of Desmos graph showing the Utah Teapot \"rendered\" using the 16 bit floating point math (yellow) and the ground truth (grey). Notice how much more accurate the 16 bit floating point is compared to the 16 bit fixed point. This is ultimately why I chose to go with floating point over fixed point for my computer."
+                },
+              ],
+            },
+            {
+              title: "Shadertoy Mandelbrot",
+              blocks: [
+                {
+                  type: "p",
+                  text: "When making the mandelbrot program for my computer I first tested the algorithm using shadertoy. I got the beautiful output bellow. "
+                },
+                {
+                  type: "image",
+                  src: "assets/images/FPGAGraphicsCard/shaderToyMandelbrot.PNG"
+                }
+              ],
+            },
           ]
         }
       ],
